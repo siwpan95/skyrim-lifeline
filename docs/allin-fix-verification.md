@@ -224,6 +224,14 @@ def _declared_dependency_bases(ctx) -> set[str]:
 3. **工作区与凭据**：`git status --short` 空；`.git/config` 无令牌形态、
    remote 只有 `https://gitee.com/siwpan/skyrim-lifeline.git`（无凭据 URL）；
    匿名 clone 临时目录已清理。
+4. **终态复验**（本报告与台账推送后）：HEAD `f144505` == `ls-remote`；
+   匿名 clone `33 / 33` 文件、集合一致；`README.md` /
+   `docs/allin-fix-verification.md` / `content/50-endings.yml` 三份 blob sha
+   逐字相同；最终报告在远端存在（`17,554 B`）。
+   > 〔本机〕`f144505` 是文档收口时的提交；**后续任何提交（含本报告自身的
+   > 最后一次编辑）都会改写它**。因此本条是「复验方法 + 时点证据」，不是永久
+   > 断言：他机与后续时点一律以现场
+   > `git ls-remote origin refs/heads/master` + 匿名 clone blob 比对为准。
 
 〔本机〕`allin` 侧同步：3 个本地提交 rebase 到 `71da92b` →
 `git push origin master` 快进到 `d7b70d5`（Gitee + GitHub 双 pushurl 均成功），
@@ -290,7 +298,7 @@ git clone --depth 1 https://gitee.com/siwpan/skyrim-lifeline.git <可写目录>/
 | `allin` | `platform/registry/projects/skyrim-lifeline.yaml`（新增登记） | `d7b70d5` |
 | `skyrim-lifeline` | 全量骨架 + 本机事实口径 | `299a582` |
 | `skyrim-lifeline` | 依赖声明 / 许可 / 安全 / 贡献 / 变更日志 / CI / SAST / 垫片 | `68532dc` |
-| `skyrim-lifeline` | 本报告 + 台账 / README / CHANGELOG 收口 | 见本仓 `git log -1` |
+| `skyrim-lifeline` | 本报告 + 台账 / README / CHANGELOG / CONTRIBUTING 收口 | `f144505`（终态复验证据见 §5.2 第 4 条） |
 
 > 〔本机〕本表 hash 均为 `@SIWPAN` 上对应分支的时点值；rebase 会改写，
 > 他机一律以本地 `git log` 现场复测。
