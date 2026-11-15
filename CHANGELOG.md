@@ -36,6 +36,9 @@
 - 骨架阶段数值未平衡：终局资源可能为负，`trust` 未做 0–100 钳制，
   缺硬性死亡分支。详见 `docs/design.md`「待办」。
 - `dse export-html` 只支持 `normal` 模式；完整可玩入口是 `dse play`。
+- `v0.1.0` git tag 已推送，指向「骨架 + 治理」提交 `68532dc`，**不含**其后的
+  文档收口提交（有意保留「首个可校验版本」语义）。Gitee 发行版页 / 附件 / 发行
+  说明尚未制作。
 - **远端 CI 尚未实跑**：本仓当前只有 Gitee 远端，GitHub Actions workflow
   不会被触发；本地 YAML 语法与等价门禁已通过，runner 实跑未验证。
   三态与未修项逐条见 `docs/allin-fix-verification.md` §6。
