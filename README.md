@@ -41,6 +41,22 @@ frostwords install-cli         # 装好上面这个命令（Windows）
 > 导出 Markdown / JSON / HTML。详见下文「CLI：完整导出一次游戏流程」
 > 与 `docs/CLI.md`。
 
+### 用法与示例
+
+常用命令示例（完整用法见 [CLI 手册](docs/CLI.md)）：
+
+| 我想… | 命令 |
+|---|---|
+| 开始游戏 | `dse play` |
+| 校验内容包 | `dse check` |
+| 列出可用结局 | `frostwords cases` |
+| 导出一次完整流程 | `frostwords export-run --format md,json,html` |
+| 导出全场景大纲 | `frostwords export-outline` |
+| 跑全部门禁 | `python tools/verify.py` |
+
+> 命令里的解释器与安装路径请按文首「口径约定」替换成该机实测值；
+> 本文出现的绝对路径与数值均为 `@SIWPAN` 时点事实。
+
 ### 引擎内可用命令
 
 | 命令 | 作用 |

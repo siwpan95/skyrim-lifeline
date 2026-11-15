@@ -1,0 +1,16 @@
+[project]
+name = "skyrim-lifeline"
+version = "0.1.0"
+description = "霜语 · Frostwords：基于 dse-core 的上古卷轴同人纯文字生存叙事"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+    "dse-core>=0.6.0,<0.7",
+]
+
+[tool.skyrim-lifeline]
+# 本仓不是要发布的 Python 包：这里只声明运行时依赖与工程元数据，
+# 供离线体检器、CI 与协作者读取。剧情逻辑全部在 content/*.yml 里。
+entry = "dse.yml"
+verify = "tools/verify.py"
+cli = "tools/frostwords_cli.py"

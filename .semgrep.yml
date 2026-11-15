@@ -1,0 +1,12 @@
+# 最小 SAST 规则集：内容包是数据，不允许工具脚本动态执行其中的文本。
+rules:
+  - id: no-dynamic-exec-in-tools
+    languages: [python]
+    severity: WARNING
+    message: >-
+      内容包是 YAML 数据，不要用 eval/exec 动态执行其中的文本；
+      请走 dse-core 的加载与校验接口。
+    patterns:
+      - pattern-either:
+          - pattern: eval(...)
+          - pattern: exec(...)
