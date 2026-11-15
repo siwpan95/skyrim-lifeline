@@ -3,6 +3,8 @@
 > 一个上古卷轴同人**纯文字生存叙事**
 > 参考对象：《生命线》(Lifeline) 系列（3 Minute Games, 2015–）
 > 引擎：[dse-core](https://pypi.org/project/dse-core/) · 字典场景引擎（场景即字典，能力即插件）
+> 远端：[gitee.com/siwpan/skyrim-lifeline](https://gitee.com/siwpan/skyrim-lifeline) · MIT · 非商业同人
+> 整改链路：[最终验证报告](docs/allin-fix-verification.md)（P0 → P3 全量实战校验）
 
 > **口径约定**：本文所有绝对路径、解释器版本、仓数、字节数与「实测」数值
 > 都是 **`@SIWPAN` 单机时点事实**，不是跨机器通用结论。命令里的
@@ -207,7 +209,8 @@ skyrim-lifeline/
 │   └── solve_e2e.py        e2e 脚本求解器（自动搜出合法通关输入流）
 ├── docs/
 │   ├── CLI.md              CLI 命令表 / 退出码 / 垫片 / 实测 / 排查
-│   ├── allin-repocheck-validation.md  以本仓为样本对 `allin` 体检器的实战校验报告
+│   ├── allin-repocheck-validation.md  以本仓为样本对 `allin` 体检器的实战校验报告（历史快照）
+│   ├── allin-fix-verification.md  P0→P3 整改最终验证报告（三态 / 远端证据 / 未修项）
 │   ├── design.md           设计文档：机制映射表 + 路径爆炸分析 + 结构约束
 │   ├── graph.mmd           场景图（109 场景，Mermaid）
 │   └── sample_transcript.txt  序章试玩实录（`dse play --input` 真实输出）
@@ -297,20 +300,26 @@ python tools/solve_e2e.py --all --write-cases      # 全量求解并回写 tests
 |---|---|---|
 | 静态图 | `dse check` | `109 场景 / 8 结局（可达 8）`，无悬空、无不可达 |
 | 引擎自检 | `dse doctor` | 健康 |
-| 全量门禁 | `python tools/verify.py` | `200 条随机路径`、`覆盖 87/109 场景 (80%)`、8 条 e2e 全过、8 个结局均 `SE`、`✓ 全部门禁通过（耗时 45.6s）` |
+| 全量门禁 | `python tools/verify.py` | `200 条随机路径`、`覆盖 87/109 场景 (80%)`、8 条 e2e 全过、8 个结局均 `SE`、`✓ 全部门禁通过` |
 | CLI 回归 | `python tests/cli_check.py` | `PASS 54  FAIL 0  SKIP 0` |
-| 全结局批量导出 | `frostwords export-run --all-endings --format md,json,html` | 8/8 结局成功，`48–52 场景步`，24 个文件共 3.6 MB |
+| 全结局批量导出 | `frostwords export-run --all-endings --format md,json,html` | 8/8 结局成功，`48–52 场景步`，25 个文件共 `3,621,848 B` |
 | 跨目录调用 | 在 `C:\Windows` 下执行 PATH 垫片 `fwcli export-run` | `49 场景步 → end-alone`，`rc=0` |
 | 垫片字节 | `cli_shim.inspect_shim()` | `ascii=True, bare_lf=0, lone_cr=0, quoted_call=True, marker=True` |
-| 跨仓实战校验 | `<ALLIN_ROOT>` 的 `tools/repocheck` 扫 `<REPOS_ROOT>` | 〔本机〕暴露体检器发现层假阴性：`139 个仓只认出 138 个`，本仓被漏检；库级体检 `score 6.0 / pass_rate 0.442`。P0 修复已落地（allin `105eab0`，识别数 `138 → 139`） |
+| 跨仓实战校验（校验时点） | `<ALLIN_ROOT>` 的 `tools/repocheck` 扫 `<REPOS_ROOT>` | 〔本机〕暴露发现层假阴性 `139 只认出 138`、库级 `score 6.0 / 0.442 / error 4` |
+| 跨仓实战校验（整改后） | 同上 + 治理门禁 | 〔本机〕`139/139` 发现、样本 `score 10.0 / 1.0 / error 0`、规则 6 修复使 `24 仓转绿 / 0 回归`、`check:governance 20/20 clean` |
+| 建仓推送 | Gitee 私有 → 一次性 URL 推送 → 转公开 | 〔本机〕`ls-remote` 与本地 HEAD 一致、匿名 clone `32/32` 文件 + 3 份 blob sha 一致、`.git/config` 无凭据 |
 
+> `verify.py` 耗时是**时点值**（本机两次分别 `45.6s` / `78.5s`，差异来自并发负载），
+> 不作门禁断言；断言的是「全部门禁通过」与覆盖结果。
+>
 > CLI 回归里出现的 `[ERR] 已中断` 是有意触发 `KeyboardInterrupt`
 > 验证退出码 `130`，不是失败。
 >
-> 本仓作为 `<ALLIN_ROOT>` 的实战校验样本，完整实测（含复现代码、30 条规则明细、
-> 缺陷定位、假阳性分析、整改台账）见 `docs/allin-repocheck-validation.md`。
-> **校验阶段只读**；整改已按 P0 → P3 推进，P0 已提交到 allin。校验时点刻意保留
-> 「无 `.git` / 无依赖声明 / 无 LICENSE」以复现漏检，该状态不代表当前工程状态。
+> 本仓作为 `<ALLIN_ROOT>` 的实战校验样本，校验时点完整实测（复现代码、30 条规则
+> 明细、缺陷定位、假阳性分析）见 `docs/allin-repocheck-validation.md`；
+> **P0 → P3 整改的最终结论、三态与未修项见 `docs/allin-fix-verification.md`**。
+> 校验阶段刻意保留「无 `.git` / 无依赖声明 / 无 LICENSE」以复现漏检，
+> 该状态不代表当前工程状态；当前仓已纳入版本控制并推送到公开远端。
 
 ---
 

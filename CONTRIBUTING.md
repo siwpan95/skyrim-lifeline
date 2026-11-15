@@ -41,3 +41,8 @@ python tools/solve_e2e.py --all --write-cases
 
 骨架阶段数值未平衡：终局可能出现负 HP / 负灵魂余量、`trust` 无上限钳制，
 缺硬性死亡分支。详见 `docs/design.md`「待办」。欢迎从这一块切入。
+
+`.github/workflows/verify.yml` 目前**未在任何远端 runner 上实跑**（本仓只有
+Gitee 远端，GitHub Actions 不触发）；本地等价门禁已通过。若后续建 GitHub
+镜像，请补跑并回写证据，勿把「YAML 语法通过」写成「CI 通过」。
+完整三态清单见 `docs/allin-fix-verification.md` §6。
