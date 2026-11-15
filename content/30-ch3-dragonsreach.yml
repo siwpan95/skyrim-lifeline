@@ -1,0 +1,597 @@
+# 内容包：ch3-dragonsreach（第三章 · 根）
+#
+# 定位：高潮章。核心机制：
+#   - battle 决战：幼龙（本作最强战斗）
+#   - 一次性承诺（once）：「我陪你到最后」只能承诺一次，且有代价
+#   - 知识门控：clues.thuUm 决定能否用龙吼（战术优势）
+#   - 高信任门槛：trust 决定结局走向（真结局 vs 代价结局）
+#
+# 本章是《生命线》式「你可能救不了她」的关键章：
+#   玩家做的每个选择都会写进 flags.choseMercy / keptSecret / knewTruth，
+#   第四章据此分流不同结局。
+
+pack:
+  id: ch3-dragonsreach
+  name: 霜语 · 第三章 根
+  version: 0.1.0
+  entry: ch3-open
+  description: 龙临堡深处：拔根之战、幼龙决战、最后的承诺
+  author: siwpan
+  modes: [battle]
+  requires:
+    plugins: [combat]
+    state: [hp, stamina, warmth, rations, gold, trust, soul, clock, items, flags, clues]
+
+scenes:
+  # ══════════════════════════════════════════════════════════════
+  # 入口：龙临堡内部
+  # ══════════════════════════════════════════════════════════════
+  ch3-open:
+    title: 第三章 · 根
+    text: |
+      「里面比外面暖。」
+
+      「不对。是热。从底下上来的热。」
+
+      「……有风。是往上吹的风。底下有火。」
+
+      「台阶。一级一级往下。」
+
+      「墙上全是骨头。龙的骨头。太多了，
+      长得不像死过，像被人摆过。」
+
+      「我数了一下台阶。数到四十的时候不数了。」
+
+    onEnter: { clock: +1, warmth: +4 }
+    choices:
+      - text: 「继续往下。热源在下面。」
+        do: { soul: -1, trust: +1 }
+        goto: ch3-hall
+      - text: 「先看看墙上那些骨头。有什么规律吗。」
+        do: { soul: -1, 'clues.dragonLair': true }
+        goto: ch3-bones
+      - text: 「你还能撑住吗？要不我们退出去。」
+        do: { soul: -1, trust: +2 }
+        goto:
+          - { to: ch3-hall, weight: 4 }
+          - { to: ch3-retreat, weight: 6 }
+
+  ch3-bones:
+    title: 第三章 · 摆过的骨头
+    text: |
+      「我看了。」
+
+      「它们是按顺序摆的。一圈一圈，像……像书架。」
+
+      「每一圈中间都有一个洞。洞里是蛋壳。」
+
+      「空壳。都孵过。」
+
+      「那些东西出去过。现在它们在往回走。」
+
+      「……我把这件事告诉你，是因为你懂这些。」
+
+    onEnter: { 'clues.dragonLair': true, trust: +2 }
+    choices:
+      - text: 「龙孵的蛋。那些尸鬼是它们的后代。」
+        do: { soul: -1, 'clues.helgenTruth': true }
+        goto: ch3-hall
+      - text: 「往回走。现在。立刻。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch3-hall, weight: 3 }
+          - { to: ch3-retreat, weight: 7 }
+
+  ch3-retreat:
+    title: 第三章 · 退回门口
+    text: |
+      「我退了。退到门口。」
+
+      「……不是害怕。是算账。」
+
+      「我还有多少血，多少力气，多少天。
+      底下那东西，是一条龙。」
+
+      「我算不明白。」
+
+      「你帮我算。」
+
+    onEnter: { clock: +1 }
+    choices:
+      - text: 「算得清：你的命比这根重要。走。」
+        do: { trust: +3, soul: -1 }
+        goto: ch3-south
+      - text: 「算不清。但你已经走到这儿了。」
+        do: { trust: +2 }
+        goto: ch3-hall
+      - text: 「你自己说。下去，还是不下去。」
+        do: { trust: +1 }
+        goto:
+          - { to: ch3-hall, weight: 6 }
+          - { to: ch3-south, weight: 4 }
+
+  # ══════════════════════════════════════════════════════════════
+  # 大殿：抉择点 —— 用不用龙吼
+  # ══════════════════════════════════════════════════════════════
+  ch3-hall:
+    title: 第三章 · 大殿
+    text: |
+      「到了。」
+
+      大殿的穹顶高得看不见。地上有一层灰，灰上只有她一个人的脚印。
+
+      「中间有个台子。台子上面有个东西在动。」
+
+      「不是龙。是像根一样的东西。很多根，
+      从台子上一直伸进地里，缠着……」
+
+      她停了。
+
+      「缠着一堆骨头。人的骨头。」
+
+      「那根在吸。吸那些骨头。」
+
+      「……我身上的火，一靠近它就烧得更凶。」
+
+    onEnter: { warmth: -6, stamina: -3 }
+    extraText:
+      - if: 'clues.thuUm'
+        text: |
+          （龙吼。你在脑子里翻那句话：推开、烧掉、点燃。推开。）
+    choices:
+      - text: 「砍断那些根。一根一根。」
+        do: { soul: -1 }
+        goto: ch3-root-cut
+      - text: 「用你的火烧它。烧掉根。」
+        do: { soul: -1, warmth: -8 }
+        goto: ch3-root-burn
+      - text: 「先看看那堆骨头。别急着动手。」
+        do: { soul: -1, trust: +1 }
+        goto: ch3-bones-pile
+      - text: 「别碰。等它睡着。」
+        if: 'clues.thuUm'
+        do: { soul: -1, trust: +2 }
+        goto:
+          - { to: ch3-root-cut, weight: 6 }
+          - { to: ch3-dragon-arrives, weight: 4 }
+
+  ch3-bones-pile:
+    title: 第三章 · 骨头堆
+    text: |
+      「我看了。」
+
+      「最上面那具还穿着衣服。帝国军的。」
+
+      「再下面是龙的。」
+
+      「再下面……是诺德人的。穿的不是甲，是袍子。
+      绣着鸟。帝国学院的那种袍子。」
+
+      「……穿袍子的人身上烧着龙焰，
+      被龙焰烧成骨头，还被这堆根连着。」
+
+      「这不对。这不应该发生。」
+
+    onEnter: { 'clues.helgenTruth': true, trust: +2 }
+    choices:
+      - text: 「你说得对。这不该发生。所以得有人把它弄对。」
+        do: { trust: +3, soul: -1 }
+        goto: ch3-root-cut
+      - text: 「别看了。砍根。」
+        goto: ch3-root-cut
+
+  # ── 拔根：三条技术路线 ───────────────────────────────────────
+  ch3-root-cut:
+    title: 第三章 · 拔根
+    text: |
+      「我砍了。」
+
+      「第一根断了的时候，整个台子震了一下。」
+
+      「第二根——」
+
+      「有东西在叫。」
+
+      「不是尸鬼那种叫。是大的。从上面下来的。」
+
+      「来不及了。」
+
+    onEnter: { stamina: -6, warmth: -6 }
+    choices:
+      - text: 「继续砍。就差最后几根。」
+        do: { soul: -1, trust: +2 }
+        goto: ch3-dragon-arrives
+      - text: 「躲到柱子后面，等它过去。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch3-dragon-arrives, weight: 4 }
+          - { to: ch3-hide, weight: 6 }
+
+  ch3-root-burn:
+    title: 第三章 · 烧
+    text: |
+      「我把它引出来了。」
+
+      「整条根烧起来的时候，我肋上那团火也烧起来了，
+      但是——」
+
+      「——它在往回缩。」
+
+      「根在缩。往骨头里缩。像是认出了我。」
+
+      「它认出我了。」
+
+      「它在往我身体里钻。」
+
+    onEnter: { hp: -8, warmth: -14, 'flags.sawDragon': true }
+    choices:
+      - text: 「别让它进去！砍断！两件事一起做！」
+        do: { soul: -1, trust: +2 }
+        goto: ch3-dragon-arrives
+      - text: 「让它进来。你不是一直想知道它是什么吗。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch3-dragon-arrives, weight: 5 }
+          - { to: ch3-reunion, weight: 5 }
+
+  ch3-hide:
+    title: 第三章 · 柱子后面
+    text: |
+      「我躲在柱子后面。」
+
+      「它下来了。」
+
+      「很大。翅膀在下面扫过去，灰尘都飞起来了。」
+
+      「它没有停。它在找。」
+
+      「在找我。」
+
+      「……柱子挡不住它。我听见骨头被踩碎的声音。」
+
+    onEnter: { stamina: -4, warmth: -6 }
+    choices:
+      - text: 「出来。跑。」
+        do: { soul: -1 }
+        goto: ch3-dragon-arrives
+      - text: 「烧它。你身上有火。」
+        do: { soul: -1, warmth: -8 }
+        goto: ch3-dragon-arrives
+
+  # ══════════════════════════════════════════════════════════════
+  # 幼龙决战
+  # ══════════════════════════════════════════════════════════════
+  ch3-dragon-arrives:
+    title: 第三章 · 它下来了
+    text: |
+      「龙。」
+
+      「小的。比外面那条小。但还是龙。」
+
+      「它看我肋上的火。它看的方式——」
+
+      「——像在认亲。」
+
+      「它朝我过来了。」
+
+      「我不认识它。但它好像认识我。」
+
+      「刀在手里。要砍哪里。」
+
+    onEnter: { 'flags.sawDragon': true }
+    extraText:
+      - if: 'clues.thuUm'
+        text: |
+          （龙吼。推开它。用声音。用诺德人的方式。）
+    choices:
+      - text: 「砍脖子下面。那里没有鳞。」
+        do: { soul: -1 }
+        goto: ch3-dragon-fight
+      - text: 「用龙吼。把它推开。」
+        if: 'clues.thuUm'
+        do: { soul: -1, trust: +2 }
+        goto:
+          - { to: ch3-dragon-fight, weight: 8 }
+          - { to: ch3-dragon-flee, weight: 2 }
+      - text: 「别打。跑。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch3-dragon-fight, weight: 3 }
+          - { to: ch3-dragon-flee, weight: 7 }
+
+  ch3-dragon-fight:
+    title: 第三章 · 骨头与鳞片
+    text: |
+      「它扑过来了——」
+
+      她的声音和金属撞击的声音混在一起。
+
+      「砍到了！」
+
+      「但它没死。它——」
+
+    mode: battle
+    battle: { enemy: dragonWhelp, onWin: ch3-dragon-win, onLose: ch3-dragon-lose, onFlee: ch3-dragon-flee }
+
+  ch3-dragon-win:
+    title: 第三章 · 它倒了
+    text: |
+      很大一声。然后整个大殿都在响。
+
+      「它倒了。」
+
+      「真的倒了。翅膀摊在地上，抽了几下，不抽了。」
+
+      她的声音在喘。
+
+      「……根断了。我听见根断的声音。
+      从骨头堆里，一根一根。」
+
+      「堆塌了。」
+
+      「台子上什么都没了。」
+
+      长久的沉默。
+
+      「它走了吗。」
+
+      「……真的走了吗。」
+
+    onEnter: { stamina: -10, warmth: -10, hp: -4, gold: +20, 'items.healingTonic': +1 }
+    choices:
+      - text: 「走了。根断了，火没地方去了。」
+        do: { trust: +3, soul: -1 }
+        goto: ch3-after-dragon
+      - text: 「我不知道。但你还在。这就够了。」
+        do: { trust: +4 }
+        goto: ch3-after-dragon
+      - text: 「先检查你身上的火。还在吗。」
+        do: { soul: -1, trust: +2 }
+        goto: ch3-after-dragon
+
+  ch3-dragon-lose:
+    title: 第三章 · 倒下的地方
+    text: |
+      刀飞出去了。
+
+      撞在石头上，很清脆的一声。
+
+      「……啊。」
+
+      「原来是这样。」
+
+      「不是疼。是冷。特别冷。」
+
+      「……你还在吗。」
+
+      「我看见你了。刚才那一下，
+      我好像……看见你了。」
+
+      「原来你长这样。」
+
+    onEnter: { hp: -10, warmth: -12 }
+    choices:
+      - text: 「别说了。省点力气。」
+        do: { soul: -1, trust: +3 }
+        goto: ch3-dragon-flee
+      - text: 「我在这。我一直在。」
+        do: { soul: -1, trust: +2 }
+        goto: ch3-dragon-flee
+
+  ch3-dragon-flee:
+    title: 第三章 · 逃
+    text: |
+      「我在跑。」
+
+      「台阶。四十级。我数了。」
+
+      「它没追。」
+
+      「为什么没追……算了，不重要。」
+
+      「我出来了。门口。外面有风。」
+
+      「风是冷的。正常的冷。」
+
+      「……那团火小了。」
+
+    onEnter: { stamina: -8, warmth: -6, hp: -4 }
+    choices:
+      - text: 「那就好。先离开这里。」
+        do: { trust: +2 }
+        goto: ch3-after-dragon
+      - text: 「火小了是什么意思？你的伤好了？」
+        do: { soul: -1, trust: +2 }
+        goto: ch3-after-dragon
+
+  # ── 重逢分支：让根钻进去（高风险高回报）────────────────────
+  ch3-reunion:
+    title: 第三章 · 根进去了
+    text: |
+      「它进来了。」
+
+      「不疼。我以为会疼，但是不疼。」
+
+      「像……像想起一件事。」
+
+      「我想起来了。」
+
+      「那天晚上确实有东西掉下来。
+      不是龙。是蛋。一颗蛋，掉在我脚边。」
+
+      「我捡起来了。」
+
+      「……我吞下去了。」
+
+      「我一直以为那是我疯了。」
+
+      她的声音稳了下来。
+
+      「'阿尔温'。那条老龙找的不是我。
+      它找的是它的蛋。」
+
+      「而我把它吃了。」
+
+    onEnter: { 'clues.helgenTruth': true, 'flags.knewTruth': true, trust: +4, warmth: +12 }
+    choices:
+      - text: 「所以你是龙裔。那我们得想清楚接下来怎么办。」
+        do: { trust: +3, soul: -1 }
+        goto: ch3-after-dragon
+      - text: 「所以海尔根那天晚上，是你去追的龙。」
+        do: { soul: -1, 'clues.dragonLair': true }
+        goto: ch3-after-dragon
+
+  # ══════════════════════════════════════════════════════════════
+  # 战后：承诺（once，一次性）
+  # ══════════════════════════════════════════════════════════════
+  ch3-after-dragon:
+    title: 第三章 · 大殿空了
+    text: |
+      「大殿空了。」
+
+      「就剩我和一堆灰。」
+
+      她坐在台子边上。声音忽然变得很轻。
+
+      「海尔薇想问你一件事。」
+
+      「你从一开始就知道我身上有东西，对不对。」
+
+      「你一直都在。」
+
+      「……如果我一直往南走，能活下去吗。」
+
+      「你说实话。」
+
+    onEnter: { clock: +1, warmth: +4 }
+    extraText:
+      - if: 'trust >= 70'
+        text: |
+          （水晶那头安静了很久。她在等一个真的答案。）
+    choices:
+      - text: 「能。但你要一直被人追，一直躲，一直不能睡。」
+        do: { trust: +3, soul: -1 }
+        goto: ch3-promise
+      - text: 「能。而且不止你一个人有这东西。」
+        if: 'clues.helgenTruth'
+        do: { trust: +4, soul: -1 }
+        goto: ch3-promise
+      - text: 「说实话我不知道。但我不想你死。」
+        do: { trust: +4, soul: -1 }
+        goto: ch3-promise
+      - text: 「你更想知道的是：这条命会不会还给你，对不对。」
+        do: { trust: +3, soul: -1 }
+        goto: ch3-promise
+
+  ch3-promise:
+    title: 第三章 · 承诺
+    text: |
+      「我想求你一件事。」
+
+      「不管最后怎么样——」
+
+      「别丢下我。」
+
+      「不是要你救我。是……」
+
+      她停了很久。
+
+      「是我怕死的时候，没有人知道我死了。」
+
+    choices:
+      - text: 「不会。我陪你到最后。」
+        do: { trust: +5, soul: -1 }
+        goto: ch3-oath
+      - text: 「我不会丢下你。但你得自己选往哪走。」
+        do: { trust: +3, soul: -1 }
+        goto: ch3-oath
+      - text: 「……我答应你。」
+        do: { trust: +6, soul: -1 }
+        goto: ch3-oath
+
+  ch3-oath:
+    title: 第三章 · 誓
+    text: |
+      「……谢谢。」
+
+      「那我们走吧。」
+
+      「往南。」
+
+      「我想到有火的地方去。真正的火。不是龙焰。」
+
+      「然后——」
+
+      「然后再说。」
+
+    onEnter: { trust: +2, clock: +1 }
+    choices:
+      - text: 「往南。我陪你。」
+        do: { soul: -1 }
+        goto: ch3-south
+      - text: 「往南。但路上我说什么你得听。」
+        do: { soul: -1, trust: +1 }
+        goto: ch3-south
+      - text: 「……」（你把最后一点力气都灌进这枚水晶里）
+        do: { soul: -1, trust: +3 }
+        goto: ch3-south
+
+  # ══════════════════════════════════════════════════════════════
+  # 第四章入口：南下之路
+  # ══════════════════════════════════════════════════════════════
+  ch3-south:
+    title: 第三章 · 南下
+    text: |
+      「出来了。」
+
+      「台阶。阳光。风。」
+
+      「……我坐在台阶上歇了一会儿。就一会儿。」
+
+      「然后我看见了外面。」
+
+      「那不是太阳。是火。」
+
+      「很大的火。烧了半边天。」
+
+      「白漫的方向。」
+
+    onEnter: { clock: +1, warmth: -6, stamina: -4 }
+    choices:
+      - text: 「那边出事了。你别过去。」
+        do: { soul: -1, trust: +2 }
+        goto: ch4-open
+      - text: 「可能是你认识的人。去看看。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch4-open, weight: 6 }
+          - { to: ch3-fire-watch, weight: 4 }
+      - text: 「（你什么都没说。你说不出口。）」
+        do: { trust: +1 }
+        goto: ch4-open
+
+  ch3-fire-watch:
+    title: 第三章 · 火的方向
+    text: |
+      「我看了很久。」
+
+      「火烧的是城墙。有人在喊。有人在跑。」
+
+      「……那些人在往山上来。往龙临堡来。」
+
+      「他们在烧自己的城，来引开那条龙。」
+
+      「——如果我是那龙，我会去的。」
+
+      「但我不是。我在这儿。」
+
+      「……我在想，如果我也在那城里，我会不会跑。」
+
+    onEnter: { trust: +2, 'flags.keptSecret': true }
+    choices:
+      - text: 「你会跑。人都会。这不丢人。」
+        do: { trust: +2 }
+        goto: ch4-open
+      - text: 「他们烧自己的城。你呢，你会烧自己吗。」
+        do: { soul: -1, trust: +2 }
+        goto: ch4-open

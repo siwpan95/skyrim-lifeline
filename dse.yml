@@ -1,0 +1,194 @@
+# 霜语（Frostwords）· 引擎工程清单
+#
+# 内容包 = 数据，不是代码。本文件是唯一的「装配点」：
+# 插件挂载顺序由 inject 依赖拓扑决定，与书写顺序无关。
+#
+# 设计文档见 docs/design.md —— 那里记录了《生命线》系列机制 → DSE 原生能力的
+# 逐条映射，以及「为什么不用自定义 mode」（Scene Schema 封闭，dse check 会拦）。
+
+# ── 内核层 ──────────────────────────────────────────────────────
+- id: scenes
+  config:
+    # 后者覆盖前者同 ID 场景（loader.merge 语义）。
+    # 顺序即剧情推进顺序；结局包放最后，它只提供结局场景。
+    packs:
+      - ./content/00-core.yml
+      - ./content/10-ch1-frostgate.yml
+      - ./content/11-ch1-trade.yml
+      - ./content/20-ch2-ashford.yml
+      - ./content/30-ch3-dragonsreach.yml
+      - ./content/40-ch4-whiterun.yml
+      - ./content/50-endings.yml
+
+- id: state
+  config:
+    # @loop 时间循环的保留域：知识跨轮保留，消耗态每轮复原。
+    # 本作未使用 @loop（保留字段以备后续扩展「一夜循环」玩法）。
+    loopKeep:
+      - clues
+      - flags
+
+    # 玩家状态初始值。
+    #
+    # 铁律：条件表达式（if:）里用到的每个顶层字段，必须在这里预声明，
+    # 否则求值时 NameError → 条件静默判 False（state.check 兜底），
+    # 表现为「选项莫名其妙不出现」，极难排查。
+    #
+    # 同理，flags.* / clues.* / items.* 里被条件引用的键也要预声明，
+    # 否则 namespace 取值抛 AttributeError，同样静默判 False。
+    initial:
+      # ── 主角：海尔薇·霜门 ──
+      name: 海尔薇·霜门
+      hp: 20                 # 生命
+      maxHp: 20
+      stamina: 10            # 体力：影响战斗与逃脱
+      maxStamina: 10
+      warmth: 78             # 体温 0-100：本作的核心生存压力源
+      rations: 3             # 口粮
+      gold: 20               # 金币
+      trust: 40              # 信任 0-100：决定真结局门槛与分支倾向
+      soul: 10               # 灵魂水晶余量：深度咨询消耗，归零即通讯断绝
+      clock: 0               # 夜深刻度：叙事时间感
+
+      # ── 战斗属性（combat 插件读取）──
+      atk: 5
+      def: 2
+      crit: 0.12
+
+      # ── 背包 ──
+      items:
+        frostBlade: 0        # 霜刃短剑 +4 atk
+        wardingAmulet: 0     # 护符
+        healingPotion: 0
+        wolfPelt: 0
+        healingTonic: 0
+
+      # ── 剧情旗标 ──
+      flags:
+        metWolf: false        # 遭遇霜狼
+        metTrader: false      # 认识走私贩索恩
+        hasPass: false        # 持有通行文书
+        bribedGuard: false    # 买通了守卫
+        knewTruth: false      # 已知海尔根真相
+        keptSecret: false     # 为她保守秘密
+        sawDragon: false      # 亲眼见过巨龙
+        tookAmulet: false     # 取走护王之链
+        choseMercy: false     # 选择放她走
+        refusedAdvice: false  # 她拒绝过你的建议
+
+      # ── 线索库：知识即选项 ──
+      clues:
+        soulLink: false       # 灵魂链接的原理
+        helgenTruth: false    # 海尔根究竟发生了什么
+        dragonLair: false     # 龙巢位置
+        thuUm: false          # 龙吼知识
+        nordCustom: false     # 诺德丧俗
+        imperialWarrant: false # 帝国通行证样式
+
+- id: io
+
+- id: engine
+  config:
+    entry: core-open        # 入场场景（可用 DSE_ENTRY / --entry 覆盖）
+    prompt: '>> '
+    seed: 20261115          # 固定加权随机种子：CI 可复现（去掉则真随机）
+    maxHistory: 60          # rollback 快照栈上限（Rewind 深度）
+
+# ── 能力层：各接管一种 scene.mode ───────────────────────────────
+- id: combat
+  config:
+    formula:
+      variance: 0.2
+      defenseFactor: 0.5
+      critMult: 1.8
+      defendCut: 0.5
+      fleeChance: 0.45
+    weapons:
+      frostBlade: { name: 霜刃短剑, atk: 4 }
+      wardingAmulet: { name: 护王护符, atk: 1 }
+    enemies:
+      frostWolf:
+        name: 霜狼
+        hp: 14
+        atk: 4
+        def: 1
+        crit: 0.12
+        drops: { gold: +6, 'items.wolfPelt': +1 }
+      marauder:
+        name: 边境掠夺者
+        hp: 16
+        atk: 5
+        def: 2
+        crit: 0.10
+        drops: { gold: +12, 'items.healingPotion': +1 }
+      frostDraugr:
+        name: 霜尸鬼
+        hp: 24
+        atk: 7
+        def: 3
+        crit: 0.12
+        drops: { gold: +10, 'items.healingPotion': +1 }
+      dragonWhelp:
+        name: 幼龙
+        hp: 30
+        atk: 8
+        def: 3
+        crit: 0.15
+        drops: { gold: +20, 'items.healingTonic': +1 }
+
+- id: dialogue
+  config:
+    # 谈判模式无全局配置，话题写在场景的 dialogue.topics 里
+
+- id: trade
+  config:
+    # 行 = 商品，列 = 第 N 天卖出价（确定性行情，便于 e2e 复现）
+    goods:
+      rations:
+        name: 干粮
+        buy: 4
+      tonic:
+        name: 温草药膏
+        buy: 9
+      amulet:
+        name: 护身符
+        buy: 14
+    schedule:
+      - [8, 8, 11, 8, 7]      # 干粮
+      - [14, 12, 12, 16, 15]  # 温草药膏
+      - [20, 20, 18, 22, 24]  # 护身符
+
+- id: diary
+
+# ── 系统层 ──────────────────────────────────────────────────────
+- id: achievements
+  config:
+    list:
+      - id: first-contact
+        name: 第一次接通
+        desc: 与海尔薇建立了灵魂链接
+        when: 'scene == "core-open"'
+      - id: wolf-friend
+        name: 皮毛生意
+        desc: 解决了霜狼，还留下了一张皮
+        when: 'flags.metWolf'
+      - id: truth-known
+        name: 海尔根之真
+        desc: 你知道了海尔根究竟发生了什么
+        when: 'clues.helgenTruth'
+      - id: amulet-taken
+        name: 护王之链
+        desc: 你从龙临堡带走了那样东西
+        when: 'flags.tookAmulet'
+      - id: white-run
+        name: 白漫再见
+        desc: 她活着走进了白漫城
+        when: 'scene == "end-whiterun"'
+      - id: thu-um
+        name: 龙语者
+        desc: 她喊出了那个字，而你还在线上
+        when: 'scene == "end-thu-um"'
+
+- id: save
+  config:
+    dir: ./saves

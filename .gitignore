@@ -1,0 +1,31 @@
+# Python runtime / caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Generated playthrough exports (rebuild: frostwords export-run --all-endings)
+exports/
+
+# Runtime save slots
+saves/
+
+# Logs
+*.log
+
+# Credentials / tokens - never commit
+.env
+.env.*
+*.token
+*token*.txt
+.git-credentials
+!.env.example
+
+# Editor / OS
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini

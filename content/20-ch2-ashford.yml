@@ -1,0 +1,885 @@
+# 内容包：ch2-ashford（第二章 · 白漫之下）
+#
+# 定位：政治与人际章。核心机制：
+#   - dialogue 谈判：与白漫守卫 / 索恩 / 龙的谈判（notes 注意力预算）
+#   - battle 升级战：霜尸鬼（比狼更强，逼迫玩家在「治疗/进攻」间取舍）
+#   - extraText + clues：知识解锁新选项（Lifeline 式「你得先知道点什么」）
+#   - once：一次性承诺（「答应索恩」只可能一次）
+#
+# 本章的隐藏设计：白漫城的两种势力（风暴斗篷 vs 帝国残余）
+# 会因为玩家的选择而产生「记录」。这些记录在第四章决定谁能帮她。
+
+pack:
+  id: ch2-ashford
+  name: 霜语 · 第二章 白漫之下
+  version: 0.1.0
+  entry: ch2-open
+  description: 白漫关卡、两条政治线、霜尸鬼遭遇、真相揭示
+  author: siwpan
+  modes: [battle, dialogue]
+  requires:
+    plugins: [combat, dialogue]
+    state: [hp, stamina, warmth, rations, gold, trust, soul, clock, items, flags, clues]
+
+scenes:
+  # ══════════════════════════════════════════════════════════════
+  # 第二章入口
+  # ══════════════════════════════════════════════════════════════
+  ch2-open:
+    title: 第二章 · 白漫之下
+    text: |
+      「我到了。」
+
+      「城墙。很高。灰石头砌的，上头有箭楼。」
+
+      「城门开着，但前面有一道栅栏，栅栏后面有人。」
+
+      「一个穿皮甲的，两把剑。还有一个穿链甲的，背着弩。」
+
+      「穿皮甲的那个在看我。」
+
+      「他看的是我右边肋上那团火。」
+
+      「他说：'站住。'」
+
+      「我说我只是个赶路的。他笑了。」
+
+      「'那更得站住。'」
+
+    onEnter: { clock: +1, warmth: -4 }
+    choices:
+      - text: 「让他搜。搜完再说。」
+        do: { soul: -1, trust: +1 }
+        goto: ch2-guard-talk
+      - text: 「把铜牌给他看。帝国的东西，帝国的人认。」
+        if: 'items.wardingAmulet >= 1 and flags.hasPass'
+        do: { soul: -1 }
+        goto:
+          - { to: ch2-guard-talk, weight: 7 }
+          - { to: ch2-guard-imperial, weight: 3 }
+      - text: 「别硬闯。你现在这个状态打不过两个带武器的。」
+        do: { soul: -1, trust: +2 }
+        goto: ch2-guard-talk
+
+  # ── 与守卫的谈判：注意力预算 ─────────────────────────────────
+  ch2-guard-talk:
+    title: 第二章 · 栅栏前
+    text: |
+      守卫没有让开。栅栏后面还有别的人在看着。
+    mode: dialogue
+    dialogue:
+      npc: 白漫守卫
+      notes: 3
+      onEnd: ch2-guard-verdict
+      topics:
+        - id: what
+          name: 你在看什么？
+          reply: |
+            「我在看那团火。」
+
+            「不是普通的火。那是龙焰。」
+
+            「姑娘，整个天际都知道龙是什么。你身上那玩意儿，
+            要么说明你跟龙有关系，要么说明你身上有它的一部分。」
+
+            「后一种更糟。因为那玩意儿不会停。」
+          effect:
+            trust: +2
+            'clues.helgenTruth': true
+        - id: proof
+          name: 我只是被烧伤了。
+          reply: |
+            「被烧伤的？」
+
+            守卫啐了一口。
+
+            「被龙焰烧过的人，血是蓝的。你现在蹲下来，
+            我看看你的手腕。」
+
+            「……看吧。蓝的。」
+
+            「你说你是被烧伤的？行。那你告诉我，是谁烧的？」
+          effect:
+            trust: +1
+        - id: help
+          name: 城里有没有能治这个的人？
+          reply: |
+            「治？」
+
+            他沉默了一会儿。
+
+            「有个法师在。学院来的。在城里给人看病，收钱。」
+
+            「但我劝你，别去。」
+
+            「不是因为他不能治。是因为他治完了会问问题，
+            而他问的问题，会有人来问你。」
+
+            「懂了吗？」
+          effect:
+            'clues.nordCustom': true
+            trust: +2
+        - id: report
+          name: 我可以给你点什么。别上报。
+          if: 'gold >= 15'
+          reply: |
+            他看了看你的钱袋，又看了看你肋上那团火。
+
+            「钱我不缺。」
+
+            「……你从北边来的？」
+
+            「北边现在什么都没有了。你能走到这儿，说明你命硬，
+            也说明你带着不该带的东西。」
+
+            「我不报。但我有条件。」
+
+            「条件是：进了城，别说我见过你。」
+
+            「能做到吗？」
+          effect:
+            'flags.bribedGuard': true
+            trust: +3
+        - id: thuUm
+          name: 什么是龙吼？
+          if: 'clues.helgenTruth'
+          reply: |
+            「龙吼。」
+
+            守卫第一次露出一点像是好奇的表情。
+
+            「诺德人的老东西。用龙的语言喊出来，能推开东西、
+            烧掉东西、点燃东西。」
+
+            「我们喊不出那个。我们是学来的，一半学不来。」
+
+            「你怎么知道这个词的？」
+
+            「……算了，不问了。今天问得够多了。」
+
+            「记住：龙吼是诺德人的东西。你身上那火也是诺德人的火。
+            别让法师校的人听见这个组合。」
+          effect:
+            'clues.thuUm': true
+            trust: +2
+
+  ch2-guard-verdict:
+    title: 第二章 · 栅栏
+    text: |
+      守卫退开了一步。
+
+      「进去。」
+
+      「往北。沿着主街走到头。」
+
+      他顿了一下。
+
+      「找个有炉子的地方待着。别乱走。别跟人说话。」
+
+      「尤其是——」
+
+      他朝城里某个方向抬了抬下巴。
+
+      「——别让那帮人看见你。」
+
+    onEnter: { 'flags.hasPass': false }
+    choices:
+      - text: 「谢了。」
+        do: { trust: +2 }
+        goto: ch2-city
+      - text: 「那帮人是谁？」
+        do: { soul: -1 }
+        goto:
+          - { to: ch2-city, weight: 7 }
+          - { to: ch2-faction-brief, weight: 3 }
+
+  ch2-faction-brief:
+    title: 第二章 · 两面旗
+    text: |
+      「帝国的人。或者曾经是帝国的人。」
+
+      「白漫现在姓风暴斗篷，但城里还有一半人不认这个姓。」
+
+      「守门的那个是旧帝国的。他不认风暴斗篷，但也不敢明着反着来。」
+
+      「两边都在找一样东西——龙。活的死的都要。」
+
+      「一个想杀，一个想卖。」
+
+      「你呢，你是第三种。」
+
+    onEnter: { 'clues.helgenTruth': true }
+    choices:
+      - text: 「第三种最好。别让任何一边知道你。」
+        do: { trust: +2 }
+        goto: ch2-city
+      - text: 「他们为什么要找龙？」
+        do: { soul: -1 }
+        goto: ch2-city
+
+  # ── 帝国分支：铜牌路线 ───────────────────────────────────────
+  ch2-guard-imperial:
+    title: 第二章 · 旧帝国的认据
+    text: |
+      穿链甲的那个一把抢过铜牌，翻过来看背面。
+
+      「……帝国军需司的暗记。」
+
+      他抬头看守卫。
+
+      「这是第三纵队的。」
+
+      守卫的表情变了。
+
+      「……让他进。」
+
+      穿链甲的收起铜牌，但没还给你。
+
+      「我留着。」
+
+      「你身上的事，我要写进报告。今天之内。」
+
+      「有人会来找你。准备好。」
+
+    onEnter: { 'flags.hasPass': false, 'flags.bribedGuard': false, trust: -2 }
+    choices:
+      - text: 「……我知道了。」
+        do: { trust: +1 }
+        goto: ch2-city
+      - text: 「报告里会写什么？」
+        do: { soul: -1 }
+        goto: ch2-city
+
+  # ══════════════════════════════════════════════════════════════
+  # 城内：三条路线
+  # ══════════════════════════════════════════════════════════════
+  ch2-city:
+    title: 第二章 · 白漫
+    text: |
+      「进去了。」
+
+      「比外面暖。烟囱冒烟，铁匠在敲东西，有人吵架。」
+
+      「有人吵架——你知道这意味着什么吗。意味着活人。」
+
+      「我坐在背风的墙根。有人在煮东西。味道是——」
+
+      她停了很久。
+
+      「算了。别说我饿。」
+
+    onEnter: { warmth: +6, clock: +1 }
+    choices:
+      - text: 「去找那个法师。你需要治疗。」
+        do: { soul: -1, trust: +2 }
+        goto:
+          - { to: ch2-mage, weight: 8 }
+          - { to: ch2-tavern, weight: 2 }
+      - text: 「先找吃的。活着才谈得上治。」
+        do: { soul: -1, rations: -1, warmth: +4 }
+        goto:
+          - { to: ch2-tavern, weight: 6 }
+          - { to: ch2-mage, weight: 4 }
+      - text: 「去龙临堡。那里有龙的大殿，或许有答案。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch2-dragonsreach, weight: 5 }
+          - { to: ch2-mage, weight: 5 }
+
+  # ── 法师：真相揭示点 ─────────────────────────────────────────
+  ch2-mage:
+    title: 第二章 · 街角的法师
+    text: |
+      「一个老头。袍子很旧，袖口烧焦了。」
+
+      「他看见我肋上那团火的时候，手里的书掉了。」
+
+      「不是害怕。」
+
+      「是认出来了。」
+
+      「他说：'海尔薇·霜门。'」
+
+      「他叫得出我的名字。」
+
+      「我问他怎么知道。他说他不知道，
+      是那团火告诉他的——'那是我烧的'。」
+
+    onEnter: { 'flags.knewTruth': true }
+    choices:
+      - text: 「让他治。他能压住那团火吗。」
+        do: { soul: -1, trust: +2 }
+        goto: ch2-mage-deal
+      - text: 「先别治。先问：海尔根那天晚上，是谁放的火。」
+        do: { soul: -1, 'clues.helgenTruth': true }
+        goto: ch2-mage-truth
+      - text: 「问他关于龙吼的事。他像是知道很多。」
+        do: { soul: -1, 'clues.thuUm': true }
+        goto: ch2-mage-truth
+
+  ch2-mage-truth:
+    title: 第二章 · 那天晚上
+    text: |
+      「他说了。」
+
+      「他说：'海尔根那晚，来了一条龙。'」
+
+      「'它没有理由来。它刚被放逐。'」
+
+      「'它在找一样东西。一样它以为被人拿走了的东西。'」
+
+      「'而那个东西，现在在你身上。'」
+
+      老法师看着她。
+
+      「'海尔薇，你不是被龙烧伤的。'」
+
+      「'你吞了它。'」
+
+      长久的沉默。
+
+      「'那天晚上，你杀了一条龙。'」
+
+    onEnter: { 'clues.helgenTruth': true, 'flags.knewTruth': true, trust: +3 }
+    choices:
+      - text: 「……她没有说话。你替她说话：让她一个人待会儿。」
+        do: { trust: +4 }
+        goto: ch2-mage-deal
+      - text: 「她需要治疗。先治，别的以后说。」
+        do: { trust: +2 }
+        goto: ch2-mage-deal
+      - text: 「别信他。法师为了钱什么都编得出来。」
+        do: { trust: -3 }
+        goto: ch2-mage-deal
+
+  ch2-mage-deal:
+    title: 第二章 · 治疗
+    text: |
+      「他动手了。」
+
+      「很疼。他说会疼。」
+
+      「火没有灭。但它慢下来了。慢很多。」
+
+      「他说：'我能给你三天，也许四天。之后它会回来找我。'」
+
+      「'你想要更多时间，得去个地方。'」
+
+      「'龙临堡。那底下有它当初吞下去的东西，
+      也有能压住它的东西——如果你敢碰。'」
+
+      「他收了钱。收了两倍。我没还价。」
+
+    onEnter: { hp: +6, warmth: +8, gold: -10, 'items.healingTonic': +1 }
+    extraText:
+      - if: 'trust >= 60'
+        text: |
+          （她付的是双倍。老法师多看了她一眼，什么也没说。）
+    choices:
+      - text: 「去龙临堡。你说呢？」
+        do: { soul: -1, trust: +1 }
+        goto:
+          - { to: ch2-dragonsreach, weight: 7 }
+          - { to: ch2-tavern, weight: 3 }
+      - text: 「先在城里待一晚。趁它还压得住。」
+        do: { soul: -1, warmth: +4 }
+        goto:
+          - { to: ch2-tavern, weight: 5 }
+          - { to: ch2-dragonsreach, weight: 5 }
+      - text: 「三天不够。你打算怎么办？」
+        do: { soul: -1, trust: +2 }
+        goto: ch2-tavern
+
+  # ── 酒馆：休整与风声 ─────────────────────────────────────────
+  ch2-tavern:
+    title: 第二章 · 酒馆一角
+    text: |
+      酒馆里很吵。你只有一点时间问点有用的。
+    mode: dialogue
+    dialogue:
+      npc: 酒馆里的诺德人
+      notes: 3
+      onEnd: ch2-tavern-after
+      topics:
+        - id: dragon
+          name: 城里的龙是怎么回事？
+          reply: |
+            「龙？」
+
+            他把杯子往桌上一顿。
+
+            「'龙临堡'底下那条，老龙。阿尔温。以前它住山里头，
+            没人管它。后来它开始吃人，于是有了圣杯骑士，
+            有了猎龙人。」
+
+            「猎龙人的营地在东边悬崖上。他们最近不太安分。」
+
+            「还有——」
+
+            他压低了声音。
+
+            「——'赫尔格'那边也在动。往南，一间一间屋地搜。
+            他们在找龙。」
+
+            「找活龙，也找死龙。」
+          effect:
+            'clues.dragonLair': true
+            trust: +1
+        - id: shade
+          name: 尸鬼是什么？
+          reply: |
+            「尸鬼。」
+
+            「诺德人死了以后，龙焰烧过的，会起来。
+            不全起来，但有些会。」
+
+            「 they'll 跟着龙的火走。你要是在外头碰见一个，
+            别想着跑得掉——它们跑得比你快。」
+
+            「用火。用龙焰。或者用你会的东西。」
+
+            他看了你一眼。
+
+            「你身上那玩意儿，正好。」
+          effect:
+            'clues.helgenTruth': true
+        - id: healer
+          name: 谁还能压住龙焰？
+          if: 'items.healingTonic >= 1'
+          reply: |
+            「有是有。」
+
+            「'冬堡'的法师们——那些疯子——他们有办法。
+            还有'白漫'约尔瓦斯克的图书馆，据说藏着一本
+            关于龙焰的书。」
+
+            「但是，」
+
+            他压低声音。
+
+            「'约尔瓦斯克'那地方，全是法师。全是那种
+            会把活人记在本子上的法师。」
+
+            「你要是想活命，别去那儿。」
+          effect:
+            'clues.thuUm': true
+        - id: price
+          name: 这条路走下去还有多远？
+          reply: |
+            「往南？'灰烬渡口'过去是'风隘'，风隘过去就是内地了。」
+
+            「不过，」
+
+            他犹豫了一下。
+
+            「你要是往北——往龙临堡那边走——」
+
+            「那条路上有东西。不是龙。是尸鬼。
+            一群一群的，从龙临堡底下漫出来。」
+
+            「没疯的人不走那条路。」
+          effect:
+            trust: +2
+            'clues.dragonLair': true
+
+  ch2-tavern-after:
+    title: 第二章 · 炉火边
+    text: |
+      「炉子很热。我睡着了大概一个时辰。」
+
+      「醒来的时候有人在看我。」
+
+      「不是守卫。是个女的。年轻的，披着灰斗篷，
+      兜帽压得很低。」
+
+      「她说：'你的火在跳。'」
+
+      「她说：'我认得那种跳法。'」
+
+      「然后她就走了。没留名字。」
+
+    onEnter: { warmth: +10, stamina: +8, clock: +1, rations: -1 }
+    choices:
+      - text: 「追出去问问她是谁。」
+        do: { soul: -1, trust: +2 }
+        goto:
+          - { to: ch2-mysterious-woman, weight: 6 }
+          - { to: ch2-dragonsreach, weight: 4 }
+      - text: 「别追。追不上，也不安全。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch2-dragonsreach, weight: 7 }
+          - { to: ch2-mysterious-woman, weight: 3 }
+
+  ch2-mysterious-woman:
+    title: 第二章 · 灰斗篷
+    text: |
+      「追上了。她在巷子口。」
+
+      「她转过身。兜帽下面是一张很年轻的脸，
+      但眼睛下面有很深的青黑。」
+
+      「她说：'海尔薇·霜门。'」
+
+      「又是这个名字。这个名字今天被太多人叫过了。」
+
+      「她说：'我叫阿尔卡。'」
+
+      「她说：'我在龙临堡待过。我知道底下有什么。'」
+
+      「她说：'你身上那个东西，在下面有根。'」
+
+    onEnter: { 'clues.dragonLair': true, trust: +2 }
+    choices:
+      - text: 「带我去龙临堡。你知道路。」
+        do: { soul: -1, trust: +2 }
+        goto: ch2-dragonsreach
+      - text: 「你为什么帮我？」
+        do: { soul: -1 }
+        goto: ch2-dragonsreach
+      - text: 「根是什么意思？」
+        do: { soul: -1, 'clues.thuUm': true }
+        goto: ch2-dragonsreach
+
+  # ══════════════════════════════════════════════════════════════
+  # 龙临堡：霜尸鬼战斗
+  # ══════════════════════════════════════════════════════════════
+  ch2-dragonsreach:
+    title: 第二章 · 龙临堡
+    text: |
+      「到了。」
+
+      「山上的石头城。很大，很黑。门是开着的。」
+
+      「……里面有东西在动。很多。」
+
+      「它们在叫。不是一个声音，是很多个，
+      但听起来像同一个。」
+
+      「我腿软了。」
+
+      「对不起。我腿软了。」
+
+      「它们在往上走。从底下往上走。」
+
+    onEnter: { clock: +1, warmth: -6, stamina: -2 }
+    choices:
+      - text: 「你在门口等着。我先进去看。」
+        do: { soul: -1, trust: +1 }
+        goto: ch2-draugr-fight
+      - text: 「一起。它们是冲你来的，你躲不掉。」
+        do: { soul: -1, trust: +2 }
+        goto: ch2-draugr-fight
+      - text: 「用你肋上那团火。它们认得龙焰。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch2-draugr-fight, weight: 7 }
+          - { to: ch2-draugr-flee, weight: 3 }
+
+  ch2-draugr-fight:
+    title: 第二章 · 尸鬼
+    text: |
+      「第一个下来了。」
+
+      「它的眼睛是空的。皮肤是青的。」
+
+      「它不怕我。我拿刀捅它，它不躲。」
+
+      「第二个。第三个。」
+
+      「我需要——」
+
+      她顿住。
+
+      「我需要知道先打哪个。」
+
+    mode: battle
+    battle: { enemy: frostDraugr, onWin: ch2-draugr-win, onLose: ch2-draugr-lose, onFlee: ch2-draugr-flee }
+
+  ch2-draugr-win:
+    title: 第二章 · 台阶上
+    text: |
+      最后那个倒了，摔下去，摔了很久才停。
+
+      「六个。」
+
+      「……底下还有。」
+
+      「门开着。里面是个大殿。很黑。」
+
+      「我能听见水声。还有别的声音。很大的呼吸。」
+
+      「海尔薇要进去吗。」
+
+      「……我不知道。我真的不知道。」
+
+    onEnter: { stamina: -6, warmth: -6, gold: +10, 'items.healingPotion': +1 }
+    choices:
+      - text: 「进。我跟你一起进。」
+        do: { trust: +3, soul: -1 }
+        goto: ch3-open
+      - text: 「你先进。我在外面替你看着。」
+        do: { trust: +1 }
+        goto:
+          - { to: ch3-open, weight: 6 }
+          - { to: ch2-draugr-flee, weight: 4 }
+      - text: 「不。今天不行。退出去。」
+        do: { trust: +1 }
+        goto: ch2-draugr-flee
+
+  ch2-draugr-lose:
+    title: 第二章 · 倒下的地方
+    text: |
+      刀从手里掉了。
+
+      「……抱歉。」
+
+      「我尽力了。」
+
+      「门还开着。你还听得见我吗。」
+
+      「如果你还听得见——」
+
+      她开始咳。咳了很久。
+
+      「——别进来。求你了。」
+
+    onEnter: { hp: -8, warmth: -8 }
+    choices:
+      - text: 「我在。」
+        do: { soul: -1, trust: +2 }
+        goto: ch2-draugr-flee
+      - text: 「（你听着。你什么也做不了。你听着。）」
+        goto: ch2-draugr-flee
+
+  ch2-draugr-flee:
+    title: 第二章 · 退出去
+    text: |
+      「我出来了。在门外。」
+
+      「没进去。」
+
+      「手在抖。刀掉在门里了。」
+
+      「……海尔薇觉得自己很没用。」
+
+      「对不起。」
+
+    onEnter: { stamina: -4, warmth: -8, 'flags.refusedAdvice': true }
+    choices:
+      - text: 「没用的是那条路，不是你。」
+        do: { trust: +4 }
+        goto: ch2-retreat-decision
+      - text: 「明天再去。休息一晚。」
+        do: { trust: +2, warmth: +6, stamina: +6, rations: -1 }
+        goto: ch2-retreat-decision
+      - text: 「再进一次。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch2-draugr-fight, weight: 4 }
+          - { to: ch2-retreat-decision, weight: 6 }
+
+  ch2-retreat-decision:
+    title: 第二章 · 往哪走
+    text: |
+      「天要亮了。太阳出来之前我们得决定。」
+
+      「南边有路，走下去就出天际了。有城，有军队，有人。」
+
+      「北边是龙临堡。我身上那东西的根在里面。」
+
+      「东边是悬崖。猎龙人的营地。听说他们会治龙焰，
+      代价是把人变成别的东西。」
+
+      「西边是山。翻过去要多久我不知道，
+      我也不知道那边有什么。」
+
+      「你说。」
+
+    onEnter: { clock: +1 }
+    choices:
+      - text: 「南边。先活下来。根的事以后再说。」
+        do: { soul: -1, trust: +1 }
+        goto: ch2-south-road
+      - text: 「龙临堡。你得知道那东西是什么，才知道怎么对付它。」
+        do: { soul: -1, trust: +2 }
+        goto: ch3-open
+      - text: 「东边，猎龙人。治好你，别的以后再想。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch2-thanes, weight: 6 }
+          - { to: ch2-south-road, weight: 4 }
+      - text: 「西边。翻山。不知道有什么，但肯定不是尸鬼。」
+        do: { soul: -1, stamina: -2 }
+        goto:
+          - { to: ch2-south-road, weight: 5 }
+          - { to: ch3-open, weight: 5 }
+
+  ch2-south-road:
+    title: 第二章 · 南路
+    text: |
+      「往南。」
+
+      「你说往南，那往南。」
+
+      「走了一天。太阳出来又落下去。
+      这地方的白天很短。」
+
+      「路上有别人。军队。风暴斗篷的，还有不知道哪来的散兵。」
+
+      「他们在往北走。」
+
+      「朝龙临堡去。」
+
+    onEnter: { clock: +2, warmth: -10, stamina: -6 }
+    choices:
+      - text: 「跟着他们走。人多，安全。」
+        do: { soul: -1, trust: +1 }
+        goto: ch3-open
+      - text: 「避开他们。你身上那东西，他们看见了会怎样？」
+        do: { soul: -1, trust: +2 }
+        goto:
+          - { to: ch3-open, weight: 7 }
+          - { to: ch2-thanes, weight: 3 }
+
+  # ── 猎龙人（Thane）支线：救赎还是交易 ───────────────────────
+  ch2-thanes:
+    title: 第二章 · 悬崖上的营地
+    text: |
+      「东边。悬崖。」
+
+      「有帐篷。有人在磨刀。」
+
+      「一个穿深色甲的走过来。脸很老，手很稳。」
+
+      「他说：'龙种。'」
+
+      「他说：'我不杀你。我把你带下去，
+      用你的血给我们做点东西。'」
+
+      「他说：'或者你可以现在就死在这儿。'」
+
+      「他在等你选。」
+
+    onEnter: { 'flags.choseMercy': false }
+    choices:
+      - text: 「问他：你要我的血做什么。」
+        do: { soul: -1 }
+        goto: ch2-thane-talk
+      - text: 「拔刀。」
+        do: { soul: -1 }
+        goto: ch2-thane-fight
+      - text: 「不答应。绕过去。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch2-thane-talk, weight: 5 }
+          - { to: ch2-south-road, weight: 5 }
+
+  ch2-thane-talk:
+    title: 第二章 · 悬崖上
+    text: |
+      老猎龙人把刀收了，但没走远。
+    mode: dialogue
+    dialogue:
+      npc: 猎龙人
+      notes: 2
+      onEnd: ch2-thane-verdict
+      topics:
+        - id: blood
+          name: 我的血能做什么？
+          reply: |
+            「很多事。」
+
+            「能压制龙焰。能做武器。能做药。」
+
+            「也能让我们的血法更强。」
+
+            「你不是第一个龙裔，海尔薇。你也不是最后一个。」
+
+            「每次天际有事，我们就会缺人。
+            你是自己送上门的。我只是接住你。」
+          effect:
+            'clues.helgenTruth': true
+        - id: refuse
+          name: 我不当祭品。
+          reply: |
+            「不当？」
+
+            他笑了。
+
+            「没人问你。你在山顶上，你在流血，
+            而我在这里有二十个人和一头龙。」
+
+            「不过——」
+
+            他收起刀。
+
+            「你有个朋友在山那边。拿着龙语水晶的那个。」
+
+            「我不信那种连接。但我信你不想让他白听你死。」
+
+            「所以我给你一次：现在下去。
+            不割你，只是看着你。」
+
+            「三天。你活三天，我就当你答应。」
+          effect:
+            trust: +2
+            'clues.soulLink': true
+
+  ch2-thane-verdict:
+    title: 第二章 · 三天
+    text: |
+      「他没有动我。」
+
+      「他说：'三天。三天之后我再来。'」
+
+      「他真的转身走了。」
+
+      「……我不喜欢这个。海尔薇不喜欢欠东西。」
+
+      「但是他说得对：三天。」
+
+      「三天之后，'那团火'会来找我。那是法师说的。」
+
+      「三天之后，我得做个决定。」
+
+    onEnter: { clock: +1, 'flags.choseMercy': true }
+    choices:
+      - text: 「三天够了。往南，找活路。」
+        do: { soul: -1, trust: +1 }
+        goto: ch2-south-road
+      - text: 「三天够了。去龙临堡，把根拔掉。」
+        do: { soul: -1, trust: +2 }
+        goto: ch3-open
+      - text: 「三天。你想怎么用这三天？」
+        do: { soul: -1, trust: +2 }
+        goto: ch3-open
+
+  ch2-thane-fight:
+    title: 第二章 · 猎龙人
+    text: |
+      「刀碰在一起的声音很闷。」
+
+      「他比我想的快。」
+
+      「……我打不过他。」
+
+      「但他也没想到我会用这个。」
+
+      火焰从她肋上窜起来。老猎龙人退了一步，
+      脸上的表情第一次变成了别的东西。
+
+      「龙焰。」
+
+      「你疯了。」
+
+      「……但你赢了这一场。」
+
+    onEnter: { hp: -6, stamina: -8, 'flags.sawDragon': true, trust: +2 }
+    choices:
+      - text: 「我不是要赢。我是要过去。」
+        do: { trust: +2 }
+        goto: ch3-open
+      - text: 「你放我走，还是我们俩都死在这儿。」
+        do: { soul: -1 }
+        goto: ch3-open

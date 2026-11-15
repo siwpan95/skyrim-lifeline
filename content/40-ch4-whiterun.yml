@@ -1,0 +1,659 @@
+# 内容包：ch4-whiterun（第四章 · 白漫）
+#
+# 定位：结局分流章。核心机制：
+#   - 战斗收尾：追兵（帝国残部 / 尸鬼群）
+#   - 最终谈判：与追兵、与她自己
+#   - 分流标志汇总：所有结局由 flags/clues/trust 组合决定
+#
+# 结局分流表（由 end-select 的条件表达式实现）：
+#   1. end-whiterun        活着走进白漫（真结局：trust 高 + 未被出卖）
+#   2. end-dragon-slayer   屠龙者（她成为龙裔且选择对抗）
+#   3. end-soldiers        被帝国残部带走（举报告发了她）
+#   4. end-exposed         被风暴斗篷识破（keptSecret 失败）
+#   5. end-alone           独自走完（trust 低 / 她拒绝一切）
+#   6. end-frozen          冻死（warmth 耗尽）
+#   7. end-dragon          被龙吞掉（战斗失败）
+#   8. end-thu-um          龙吼（隐藏结局：最高信任 + 知道龙吼）
+#   9. end-mercy           她死了，但你替她办了事（高信任 + 她死）
+#  10. end-refused         她把你切断了（trust 极低）
+
+pack:
+  id: ch4-whiterun
+  name: 霜语 · 第四章 白漫
+  version: 0.1.0
+  entry: ch4-open
+  description: 白漫城下：追兵、最终抉择、结局分流
+  author: siwpan
+  modes: [battle, dialogue]
+  requires:
+    plugins: [combat, dialogue]
+    state: [hp, stamina, warmth, rations, gold, trust, soul, clock, items, flags, clues]
+
+scenes:
+  # ══════════════════════════════════════════════════════════════
+  # 入口
+  # ══════════════════════════════════════════════════════════════
+  ch4-open:
+    title: 第四章 · 白漫
+    text: |
+      「我到了。」
+
+      「半座城在烧。另外半座在喊。」
+
+      「城门开着。挤满了人。往里跑的，往外跑的，
+      撞在一起的。」
+
+      「我进不去。挤不进去。而且……」
+
+      「我这样不能进去。」
+
+      「我肋上这团火，走过去就会被看见。」
+
+      「……海尔薇在城外面站着。离城门二十步。」
+
+      「这大概是我离'有人烟的地方'最近的一次。」
+
+    onEnter: { clock: +1, warmth: -5, stamina: -4 }
+    choices:
+      - text: 「把火压下去。找块布，裹住。」
+        do: { soul: -1, trust: +2, warmth: +6 }
+        goto: ch4-conceal
+      - text: 「硬闯。挤进去再说。」
+        do: { soul: -1, stamina: -3 }
+        goto:
+          - { to: ch4-conceal, weight: 4 }
+          - { to: ch4-rush-gate, weight: 6 }
+      - text: 「等等。先看清楚城里什么情况。」
+        do: { soul: -1, trust: +1 }
+        goto: ch4-scout
+
+  ch4-scout:
+    title: 第四章 · 看清楚
+    text: |
+      「我趴在一块石头后面看了很久。」
+
+      「城门口有两拨人在拦。不是一拨。」
+
+      「一拨穿链甲。帝国残部。他们在抓人，
+      抓年轻的，问话。」
+
+      「一拨穿皮甲。风暴斗篷的。他们在放人进去，
+      但只放本城的人。」
+
+      「两边都不管我。可两边都会看我。」
+
+    onEnter: { 'clues.helgenTruth': true }
+    choices:
+      - text: 「走帝国那边。他们在抓人，说明还没放弃查龙。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch4-imperial-line, weight: 6 }
+          - { to: ch4-stormcloak-line, weight: 4 }
+      - text: 「走风暴斗篷那边。他们在收人，说明缺人手。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch4-stormcloak-line, weight: 6 }
+          - { to: ch4-imperial-line, weight: 4 }
+      - text: 「两边都不走。你从北边的水门进。」
+        do: { soul: -1, trust: +2 }
+        goto: ch4-water-gate
+
+  # ── 帝国线 ───────────────────────────────────────────────────
+  ch4-imperial-line:
+    title: 第四章 · 链甲
+    text: |
+      「我走向链甲那边。」
+
+      「一个军官拦住我。年轻的，很累，眼圈是黑的。」
+
+      「他上下打量我。然后他看见肋上那团火。」
+
+      「他的脸白了。」
+
+      「'龙种。'」
+
+      「他把手放在剑上，但没拔。」
+
+      「'你从北边来。'」
+
+      「'北边现在只有一样东西。'」
+
+    onEnter: { clock: +1 }
+    choices:
+      - text: 「我有名字。我叫海尔薇·霜门。我不是龙。」
+        do: { soul: -1, trust: +2 }
+        goto: ch4-imperial-talk
+      - text: 「我在找活路。往南边去。行个方便。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch4-imperial-talk, weight: 6 }
+          - { to: ch4-rush-gate, weight: 4 }
+
+  ch4-imperial-talk:
+    title: 第四章 · 链甲前
+    text: |
+      军官的手还放在剑上。他在等你的下一句话。
+    mode: dialogue
+    dialogue:
+      npc: 帝国军官
+      notes: 2
+      onEnd: ch4-imperial-verdict
+      topics:
+        - id: ask
+          name: 我要什么，才能过去？
+          reply: |
+            「过去。」
+
+            他苦笑了一下。
+
+            「过去很容易。往南三里有个营地，
+            往北三里有个山坳。哪边都行。」
+
+            「难的是你身上那东西。」
+
+            「我们的人——我那些还在的兵——里面有六个，
+            三年前跟龙打过。沾了龙焰的。」
+
+            「他们现在不是人了。」
+
+            他看着你的肋上。
+
+            「你还有意识，还会说话。这很罕见。」
+
+            「罕见不代表他们会放过你。」
+          effect:
+            'clues.helgenTruth': true
+        - id: cure
+          name: 有没有办法把它压住？
+          reply: |
+            「有。」
+
+            「'白漫'城里有法师。有'约尔瓦斯克'。」
+
+            「但不是免费的，也不是干净的。」
+
+            「'龙临堡'底下有更彻底的办法。没人活着回来过。」
+
+            「你自己选。」
+
+            他顿了顿。
+
+            「还有一条：'海尔根'。那地方现在没人，
+            但据说龙在那里下过蛋。」
+
+            「蛋能孵出人来。」
+          effect:
+            'clues.dragonLair': true
+            'clues.thuUm': true
+        - id: report
+          name: 如果我帮你，你能给我什么？
+          if: 'gold >= 20'
+          reply: |
+            他看着你很久。
+
+            「钱我不要。」
+
+            「我缺的是人手。北边那条路，我们三个月没派人进去了。」
+
+            「你要是有胆子……」
+
+            他停住了，像是被自己的话噎住。
+
+            「算了。别答应我。你先活着。」
+
+            「活着的人才能谈这个。」
+
+          effect:
+            trust: +3
+            'flags.keptSecret': true
+
+  ch4-imperial-verdict:
+    title: 第四章 · 军官的判决
+    text: |
+      军官想了很久。
+
+      「我不举报你。」
+
+      「但是——」
+
+      「你得跟我走。不是抓你。是……带你去个地方。」
+
+      「'海尔根'。旧帝国的实验场。三年前我们撤了，
+      留下一些东西在那儿。」
+
+      「龙焰烧不掉的东西，用龙焰也许能用。」
+
+      「你说的'根'，我知道。我见过。」
+
+      「跟我走，我带你去看看。」
+
+    onEnter: { clock: +1 }
+    choices:
+      - text: 「跟你走。但我随时能走。」
+        do: { soul: -1, trust: +2 }
+        goto: ch4-end-select
+      - text: 「不去。我自己找办法。」
+        do: { soul: -1, trust: +1 }
+        goto: ch4-end-select
+      - text: 「为什么帮我？」
+        do: { soul: -1, trust: +3 }
+        goto: ch4-end-select
+
+  # ── 风暴斗篷线 ───────────────────────────────────────────────
+  ch4-stormcloak-line:
+    title: 第四章 · 皮甲
+    text: |
+      「我走向皮甲那边。」
+
+      「一个女的。斗篷上有雪，脚上有泥。
+      她在把往里跑的人分开，伤的往左边，
+      好的往右边。」
+
+      「她看见我的时候，手停了。」
+
+      「'龙种。'」
+
+      「周围的人开始往后退。」
+
+      「她没退。她盯着我肋上那团火看了很久。」
+
+      「'你会说话。'」
+
+      「'上一个会说话的龙种，死在龙临堡门口。'」
+
+    onEnter: { clock: +1 }
+    choices:
+      - text: 「我会说话。我还有名字。」
+        do: { soul: -1, trust: +2 }
+        goto: ch4-stormcloak-talk
+      - text: 「我不是龙。我是海尔薇·霜门，风暴斗篷的斥候。」
+        do: { soul: -1, trust: +3 }
+        goto:
+          - { to: ch4-stormcloak-talk, weight: 8 }
+          - { to: ch4-scout-fight, weight: 2 }
+
+  ch4-stormcloak-talk:
+    title: 第四章 · 火把下
+    text: |
+      她挡在路中间，等着你把话说完。
+    mode: dialogue
+    dialogue:
+      npc: 风暴斗篷的女战士
+      notes: 2
+      onEnd: ch4-stormcloak-verdict
+      topics:
+        - id: scout
+          name: 我是斥候，去年冬天去海尔根的那个。
+          reply: |
+            她盯着你看了五秒。
+
+            「六个。」
+
+            「去的是六个。」
+
+            「回来的是几个？」
+
+            「……一个。」
+
+            她把斗篷的兜帽往后推了一点。
+
+            「名字。」
+
+            「海尔薇·霜门。」
+
+            「海尔薇。风暴斗篷记着你的名字。你是海尔薇·
+            银手。」
+
+            她顿了顿。
+
+            「不是霜门。是银手。档案上写的。」
+
+            「霜门是你自己改的，对吧。」
+          effect:
+            trust: +4
+            'clues.nordCustom': true
+        - id: help
+          name: 我需要治疗。
+          reply: |
+            「需要。」
+
+            「城里有法师。但我劝你先别去。」
+
+            「法师不问问题。他们记录。」
+
+            「记录会往上送。送到那些坐在桌后的人手里。」
+
+            「你现在这样，走进去三天之内，
+            有人会知道你身上有什么。」
+
+            「我知道一个地方。'冰霜海湾'有个老术士，
+            他不问问题，只要钱。」
+
+            「或者——」
+
+            她看了一眼北边。
+
+            「'龙临堡'。你从那儿来的吧。
+            那底下有能压住火的东西。
+            但底下也有别的东西。」
+          effect:
+            'clues.dragonLair': true
+            'clues.thuUm': true
+        - id: truth
+          name: 我杀过一条龙。
+          if: 'flags.knewTruth'
+          reply: |
+            她没有尖叫，也没有拔剑。
+
+            「……杀了。」
+
+            「不是'被烧伤'，不是'沾上'。是'杀了'。」
+
+            她沉默了很久。
+
+            「我在海尔根的时候见过那条龙。」
+
+            「我跑得比谁都快。」
+
+            「我不怪你。任何人都会跑。」
+
+            「但你回来了。」
+
+            「这才是我不敢信的部分。」
+          effect:
+            trust: +5
+            'clues.helgenTruth': true
+
+  ch4-stormcloak-verdict:
+    title: 第四章 · 女战士的判断
+    text: |
+      「她背过身，跟旁边的人说了几句。
+      然后她转回来。」
+
+      「'我不举报你。'」
+
+      「'但你现在进不了城。'」
+
+      「'城里有命令，见龙种就烧。不管会不会说话。'」
+
+      她看向北边。
+
+      「'龙临堡'。底下有个东西，是当年龙吐出来没消化的。
+      帝国人叫它'龙核'。」
+
+      「'那东西能压住你肋上的火。因为那本来就是它的。'」
+
+      「'去不去，你自己想。'」
+
+      「'但如果你去——'」
+
+      她把一个小瓶子塞进你手里。
+
+      「'这个能让你撑过路上那段。'」
+
+    onEnter: { clock: +1, 'items.healingTonic': +1, 'flags.keptSecret': true }
+    choices:
+      - text: 「我试试。谢谢你。」
+        do: { trust: +4 }
+        goto: ch4-end-select
+      - text: 「你怎么知道这些？」
+        do: { soul: -1, trust: +2 }
+        goto: ch4-end-select
+      - text: 「我进不了城，那就去龙临堡。」
+        do: { soul: -1, trust: +2 }
+        goto: ch4-end-select
+
+  # ── 混战：尸鬼冲城 ───────────────────────────────────────────
+  ch4-scout-fight:
+    title: 第四章 · 它们来了
+    text: |
+      「我还没说完，就听见了那个声音。」
+
+      「从北边。从山上。」
+
+      「很多个。一起叫。」
+
+      「是尸鬼。」
+
+      「城门破了。人往两边跑。有人被撞倒，
+      有人踩着人跑。」
+
+      「那个女战士拔了剑，朝我喊：'别站那儿！'」
+
+    onEnter: { 'flags.sawDragon': true }
+    choices:
+      - text: 「冲进去。城里挤，反而安全。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch4-rush-gate, weight: 6 }
+          - { to: ch4-scout-fight-battle, weight: 4 }
+      - text: 「留下来挡。你和城里人一起退，我引开它们。」
+        do: { soul: -1, trust: +4 }
+        goto: ch4-scout-fight-battle
+
+  ch4-scout-fight-battle:
+    title: 第四章 · 城门口
+    text: |
+      「来了三个。」
+
+      「快。但是慢——比人慢。」
+
+      「刀在手里。」
+
+    mode: battle
+    battle: { enemy: frostDraugr, onWin: ch4-after-fight, onLose: ch4-fight-lose, onFlee: ch4-rush-gate }
+
+  ch4-after-fight:
+    title: 第四章 · 挡住了
+    text: |
+      第三个倒下去，拖了一下，不动了。
+
+      「……你替我挡了。」
+
+      「不是替我挡。是你让它们冲我来，
+      我跑不掉。」
+
+      她喘着气。
+
+      「那女战士在喊你。进城。快。」
+
+      「她们在关城门。」
+
+    onEnter: { stamina: -8, warmth: -6, hp: -4 }
+    choices:
+      - text: 「进。」
+        do: { trust: +2 }
+        goto: ch4-rush-gate
+      - text: 「你先走。我断后。」
+        do: { soul: -1, trust: +3 }
+        goto: ch4-end-select
+
+  ch4-fight-lose:
+    title: 第四章 · 没挡住
+    text: |
+      刀脱手了。
+
+      「……又来了。」
+
+      「每次都是这样。每次我都要在同一个地方倒下。」
+
+      「城在关。你听见了吗。那个声音。」
+
+      「别进来了。」
+
+    onEnter: { hp: -12, warmth: -10 }
+    choices:
+      - text: 「（你听着。你什么都做不了。你听着。）」
+        goto: ch4-rush-gate
+      - text: 「我听着呢。到最后都听着。」
+        do: { soul: -1, trust: +2 }
+        goto: ch4-rush-gate
+
+  # ── 水门（玩家自己想出的路线）──────────────────────────────
+  ch4-water-gate:
+    title: 第四章 · 水门
+    text: |
+      「水门在北边。铁栅栏，锈死了。」
+
+      「我推了。推不动。」
+
+      「但是冰。这水结冰了。」
+
+      「我能砸开冰吗。我不知道。我手上都是血。」
+
+      「给我一会儿。」
+
+      「……好。开了。水不深。」
+
+      「进来了。」
+
+    onEnter: { stamina: -6, warmth: -4, trust: +2 }
+    choices:
+      - text: 「好。往里走，别出声。」
+        do: { soul: -1 }
+        goto: ch4-end-select
+      - text: 「里面有人吗？」
+        do: { soul: -1, trust: +1 }
+        goto: ch4-end-select
+
+  # ── 硬闯城门 ─────────────────────────────────────────────────
+  ch4-rush-gate:
+    title: 第四章 · 挤
+    text: |
+      「我挤进去了。」
+
+      「被人踩了三次。有人骂我。有人看见我肋上的火，
+      尖叫了一声，然后所有人都开始看我。」
+
+      「有个老人往后退，退到墙上，然后开始喊：
+      '龙种！是龙种！'」
+
+      「——然后呢？」
+
+      「我不知道。我跑。」
+
+      「我跑进去了。里面有一条巷子。
+      巷子里很黑。有火把。」
+
+    onEnter: { stamina: -6, warmth: -6, trust: -1 }
+    choices:
+      - text: 「找个人多的地方。有人的地方他们不敢动手。」
+        do: { soul: -1, trust: +2 }
+        goto: ch4-end-select
+      - text: 「找个角落。躲起来。等天亮。」
+        do: { soul: -1, warmth: +4 }
+        goto: ch4-end-select
+
+  # ── 藏火 ─────────────────────────────────────────────────────
+  ch4-conceal:
+    title: 第四章 · 裹起来
+    text: |
+      「我撕了一块袍子。裹了三层。」
+
+      「看不见了。但是能感觉到它。
+      在里面烧着。像有个小孩在怀里哭。」
+
+      「……我能进去吗。」
+
+      「能。我能。」
+
+    onEnter: { warmth: -6, trust: +1 }
+    choices:
+      - text: 「进吧。低着头走，别看人。」
+        do: { soul: -1 }
+        goto: ch4-end-select
+      - text: 「先别进。再等等，看看城里什么样。」
+        do: { soul: -1, trust: +2 }
+        goto: ch4-scout
+
+  # ══════════════════════════════════════════════════════════════
+  # 结局分流闸门
+  # ══════════════════════════════════════════════════════════════
+  ch4-end-select:
+    title: 第四章 · 尽头
+    text: |
+      「我停下来了。」
+
+      「在一个……不知道是什么地方的地方。有火把。有墙。」
+
+      「……」
+
+      「你说实话。」
+
+      「我还有多少时间。」
+
+      （她在等。等一个数字，或者等一个方向。）
+
+    onEnter: { clock: +1 }
+    choices:
+      - text: 「三天。够你走到有人的地方。」
+        do: { soul: -1, trust: +1 }
+        goto: ch4-final
+      - text: 「我不知道。但我们还在说话。」
+        do: { soul: -1, trust: +3 }
+        goto: ch4-final
+      - text: 「（你沉默。你想不出办法。你不想说谎。）」
+        do: { trust: +2 }
+        goto: ch4-final
+
+  ch4-final:
+    title: 第四章 · 最后一件事
+    text: |
+      「有件事，我一直没说。」
+
+      「海尔薇在这座城里，有一个人。」
+
+      「不是朋友。是个……」
+
+      她停了很久。
+
+      「……我进白漫，本来是要去找他的。」
+
+      「现在我进来了。城里在烧。到处是人。」
+
+      「我该去找他吗。」
+
+    choices:
+      - text: 「去找他。你走了这么远不是为了进城。」
+        do: { soul: -1, trust: +2 }
+        goto: ch4-final-choice
+      - text: 「别去了。现在这城里没有他要的东西。」
+        do: { soul: -1, trust: +1 }
+        goto: ch4-final-choice
+      - text: 「你想去吗。这才是重点。」
+        do: { soul: -1, trust: +3 }
+        goto: ch4-final-choice
+
+  ch4-final-choice:
+    title: 第四章 · 去
+    text: |
+      「……我想。」
+
+      「他叫'阿尔卡'。就是那天在酒馆看我的人。」
+
+      「不对。那天在酒馆看我的人是她。」
+
+      「阿尔卡是她哥哥。」
+
+      「他是'龙临堡'守墓人。专门管底下那些东西。
+      他研究了一辈子怎么对付龙焰。」
+
+      「他也没能治好我。」
+
+      「但是——」
+
+      「他还活着。」
+
+      「只要他还活着，就还有希望。」
+
+    onEnter: { trust: +2, 'flags.knewTruth': true }
+    choices:
+      - text: 「那就去找他。我陪你。」
+        do: { soul: -1, trust: +3 }
+        goto: end-select
+      - text: 「先看看城里的情况。他要是死了你也没必要去。」
+        do: { soul: -1, trust: +2 }
+        goto: end-select
+      - text: 「……那我们快点。」
+        do: { soul: -1, trust: +2 }
+        goto: end-select

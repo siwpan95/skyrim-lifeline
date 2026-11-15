@@ -1,0 +1,299 @@
+# 内容包：ch1-frostgate 续（渡口 · 补给 · 出口）
+#
+# 单独成文件而非并入 10- 包的原因：这一段是「资源转换枢纽」——
+# 玩家在这里把体温/口粮/金币换成品，之后每个选择都有代价。
+# 拆包便于后续单独调参（数值改动不影响主包 review diff）。
+
+pack:
+  id: ch1-trade
+  name: 霜语 · 灰烬渡口
+  version: 0.1.0
+  entry: ch1-cross-ashford
+  description: 灰烬渡口：补给交易、走私贩索恩、进入第二章
+  author: siwpan
+  modes: [trade, dialogue]
+  requires:
+    plugins: [trade, dialogue]
+    state: [hp, stamina, warmth, rations, gold, trust, soul, clock, stock, items, flags, clues]
+
+scenes:
+  # ══════════════════════════════════════════════════════════════
+  # 进入渡口
+  # ══════════════════════════════════════════════════════════════
+  ch1-cross-ashford:
+    title: 第一章 · 灰烬渡口
+    text: |
+      「渡口到了。」
+
+      「有棚子。有干草。有个老头在补网。」
+
+      「他看见我了。我看见他看见我了。」
+
+      「他没喊人。」
+
+      「这不正常，海尔根以后没有人不喊人。」
+
+      「所以——他不正常，还是他想要点什么？」
+
+    onEnter: { warmth: -3, clock: +1 }
+    choices:
+      - text: 「先别暴露。他要什么，你就给什么。」
+        do: { soul: -1, trust: +2 }
+        goto: ch1-ask-thorn
+      - text: 「直接走过去。看他反应。」
+        do: { trust: +1 }
+        goto:
+          - { to: ch1-ask-thorn, weight: 6 }
+          - { to: ch1-thorn-hostile, weight: 4 }
+      - text: 「绕开他。这里不安全。」
+        do: { soul: -1 }
+        goto:
+          - { to: ch1-ask-thorn, weight: 3 }
+          - { to: ch1-skip-thorn, weight: 7 }
+
+  # ── 索恩的试探 ────────────────────────────────────────────────
+  ch1-ask-thorn:
+    title: 第一章 · 补网的人
+    text: |
+      「他开口了。」
+
+      「他说：'姑娘，你身上那味道，不是雪的味道。'」
+
+      「他还说：'我不问。我只做生意。'」
+
+      「他指了指棚子里的东西：干粮、药膏、还有一个小铜牌。」
+
+      「'药膏能压住那种火，撑不了三天。'」
+
+      「'铜牌能过白漫的关。帝国的关卡认这个。'」
+
+      「'你拿什么付？'」
+
+    onEnter: { 'flags.metTrader': true }
+    choices:
+      - text: 「告诉他：血、情报、或者命。他要哪个？」
+        do: { soul: -1, trust: +2 }
+        goto: ch1-trade
+      - text: 「问他：这附近有什么在飞。」
+        do: { soul: -1, 'clues.dragonLair': true }
+        goto: ch1-trade
+      - text: 「问他：海尔根那天晚上，你在哪。」
+        do: { soul: -1, trust: -1 }
+        goto:
+          - { to: ch1-trade, weight: 7 }
+          - { to: ch1-thorn-history, weight: 3 }
+
+  ch1-thorn-history:
+    title: 第一章 · 索恩的沉默
+    text: |
+      她的声音突然冷了。
+
+      「他说什么。」
+
+      你把他的话转述过去。
+
+      「……」
+
+      「他那天晚上在渡口。他说他在收网。」
+
+      「六个人走过去的时候他在收网。海尔根烧起来的时候他在收网。」
+
+      「然后他现在跟我讲做生意。」
+
+      「我真想——」
+
+      她停住了。
+
+      「算了。他有东西是我需要的。」
+
+    onEnter: { trust: -2 }
+    choices:
+      - text: 「那就买。别让他看出来你恨他。」
+        do: { trust: +2 }
+        goto: ch1-trade
+      - text: 「那你就走。别跟这种人打交道。」
+        do: { trust: +1 }
+        goto:
+          - { to: ch1-trade, weight: 4 }
+          - { to: ch1-skip-thorn, weight: 6 }
+
+  ch1-thorn-hostile:
+    title: 第一章 · 他喊了
+    text: |
+      「他喊了。」
+
+      「喊得很难听。不是一个字，是一个词——
+      喊的是'龙种'。」
+
+      「然后他就跑了。往棚子后面跑。」
+
+      「远处有马。」
+
+      「……对不起。是我判断错了。」
+
+    onEnter: { warmth: -6, stamina: -4, 'flags.refusedAdvice': true }
+    choices:
+      - text: 「追。别让他跑到马那边。」
+        do: { soul: -1 }
+        goto: ch1-thorn-chase
+      - text: 「别追。躲起来，等他过去。」
+        do: { soul: -1, trust: +1 }
+        goto:
+          - { to: ch1-thorn-chase, weight: 3 }
+          - { to: ch1-hide, weight: 7 }
+
+  ch1-thorn-chase:
+    title: 第一章 · 追
+    text: |
+      「追上了。」
+
+      喘息声。很重。
+
+      「他没跑到马那边。他摔了。」
+
+      「……我做什么？」
+
+      「他还在喊。喊得嗓子都劈了。」
+
+      「我知道他不该喊。我知道。」
+
+      「但他喊的是事实。」
+
+    onEnter: { stamina: -6, warmth: -4 }
+    choices:
+      - text: 「让他喊。喊完带他走。他有我们需要的东西。」
+        do: { soul: -1, trust: +3 }
+        goto: ch1-trade
+      - text: 「让他闭嘴。然后我们走。不要东西了。」
+        do: { soul: -1, trust: +1, 'flags.choseMercy': true }
+        goto:
+          - { to: ch1-trade, weight: 5 }
+          - { to: ch1-skip-thorn, weight: 5 }
+
+  ch1-hide:
+    title: 第一章 · 草垛后面
+    text: |
+      「我躲在草垛后面。他骑马过去了。」
+
+      「他没有指这边。」
+
+      「他可能没看见我。也可能他指了，只是没说出来。」
+
+      「……现在怎么办。我不能在这蹲一整晚。」
+
+    onEnter: { warmth: -8, stamina: -2 }
+    choices:
+      - text: 「趁他走了，去棚子看看他留下了什么。」
+        do: { soul: -1 }
+        goto: ch1-trade
+      - text: 「继续走。别贪那点东西。」
+        do: { soul: -1, trust: +1 }
+        goto: ch1-skip-thorn
+
+  ch1-skip-thorn:
+    title: 第一章 · 离开渡口
+    text: |
+      「我走了。没停。」
+
+      「没药膏，没铜牌。」
+
+      「但也没被人喊出来。」
+
+      「天在亮。前面有路。」
+
+      「我这身东西……大概撑不到白漫。」
+
+      「……大概。」
+
+    onEnter: { warmth: -5, clock: +1 }
+    choices:
+      - text: 「撑得到。你已经走到这儿了。」
+        do: { trust: +3 }
+        goto: ch1-exit
+      - text: 「那就在撑不到之前，找个能喘气的地方。」
+        do: { soul: -1 }
+        goto: ch1-exit
+
+  # ══════════════════════════════════════════════════════════════
+  # 交易：体温/金币 → 补给
+  # ══════════════════════════════════════════════════════════════
+  ch1-trade:
+    title: 第一章 · 索恩的摊子
+    text: |
+      干草堆里有火。很小的一堆，但够暖手。
+
+      「他把钱数了两遍。第二遍的时候他把钱推回来了点。」
+
+      「'药膏是三天的量。'」
+
+      「'铜牌能过一道关，不一定能过第二道。'」
+
+      「'你自己看着办。我不赊账。'」
+
+    mode: trade
+    trade:
+      name: 灰烬渡口 · 索恩的摊子
+      days: 2
+      onEnd: ch1-trade-after
+
+  ch1-trade-after:
+    title: 第一章 · 交易之后
+    text: |
+      「他收钱了。」
+
+      「东西有点糙，但能用。」
+
+      她停了一下。
+
+      「铜牌上刻着一只鸟。展翅的。」
+
+      「帝国的东西。旧帝国的东西。」
+
+      「拿着它进白漫，会有人问我从哪来的。」
+
+      「你怎么想？拿着，还是不拿。」
+
+    onEnter: { clock: +1 }
+    extraText:
+      - if: 'items.wardingAmulet >= 1'
+        text: |
+          （她把铜牌翻过来看了很久。背面刻着一个很小的、几乎磨平的名字。）
+    choices:
+      - text: 「拿着。有用的时候再说是谁的。」
+        do: { 'flags.hasPass': true, trust: +1 }
+        goto: ch1-exit
+      - text: 「别拿。帝国的牌进风暴斗篷的地盘，是自投罗网。」
+        do: { trust: +2, 'flags.keptSecret': true }
+        goto: ch1-exit
+      - text: 「你拿着它，你自己决定怎么用。」
+        do: { 'flags.hasPass': true }
+        goto: ch1-exit
+
+  # ══════════════════════════════════════════════════════════════
+  # 第一章出口
+  # ══════════════════════════════════════════════════════════════
+  ch1-exit:
+    title: 第一章 · 往南
+    text: |
+      「我往南走了。」
+
+      「天亮了一点。灰变成白的。」
+
+      「南边是大道。走过去大概两天，
+      到了有墙的地方就有火。」
+
+      「……海尔薇想先歇一会儿。可以吗。」
+
+      「就一会儿。」
+
+    onEnter: { clock: +1, warmth: -3 }
+    choices:
+      - text: 「歇。好好睡。」
+        do: { trust: +3, stamina: +6, warmth: +10, rations: -1 }
+        goto: ch2-open
+      - text: 「不能停。一停就起不来了。」
+        do: { trust: +1 }
+        goto: ch2-open
+      - text: 「（你什么也没说。让她自己决定。）」
+        do: { trust: +1 }
+        goto: ch2-open
