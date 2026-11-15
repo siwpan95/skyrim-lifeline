@@ -288,7 +288,7 @@ r = scanner.check_project(r"<PROJECT_ROOT>")
 |---|---|---|---|
 | P0 | 修 `scanner.py` 深度口径 + 2 条正反回归用例 | ✅ **已验证** | allin `3b0b407`（rebase 后）；`pytest tools/repocheck/` **70 项全绿**；发布区 `138 → 139` |
 | P1 | 本机事实标注（本文 §0 + README / `docs/CLI.md` 口径块 + 跨项目写作规范） | ✅ **已验证** | 本文件 §0、`g20-facts` clean、用户级 `MEMORY.md` 写作铁律 |
-| P2 | 样本仓版本控制、依赖声明、LICENSE、安全 / 贡献 / 变更日志 / CI / SAST、registry 登记 | ✅ **已验证** | 本仓 `299a582` + `68532dc`；`score 6.0/0.442 → 10.0/1.0`；allin `67dc184`（规则 6）+ `d7b70d5`（登记）；`g17` `146/138/0 阻断` |
+| P2 | 样本仓版本控制、依赖声明、LICENSE、安全 / 贡献 / 变更日志 / CI / SAST、registry 登记 | ✅ **已验证** | 本仓 `299a582` + `68532dc`；`score 6.0/0.442 → 10.0/1.0`；allin `67dc184`（规则 6）+ `d7b70d5`（登记）；`g17` 终态 `147/138/0 阻断`（rebase 带入远端 `piano.yaml`，非本批新增） |
 | P3 | 完整复跑 / 建仓推送 / 整改验证报告 | ✅ **已验证** | `check:governance` **20/20 clean**；`g04` 双远端 `IN_SYNC`；匿名 clone 32 文件 + blob sha 一致；`docs/allin-fix-verification.md` |
 
 **三态**：✅ 已验证（有可见执行证据） / ⏳ 进行中 / ❌ 未修或未验证（须写明理由）。

@@ -58,7 +58,7 @@
 |---|---|---|---|---|
 | P0 | 修 `repocheck` 发现层假阴性 | ✅ 已验证 | `enumerate(os.walk())` 的 yield 序号不是目录层级；改用 `len(Path(dirpath).relative_to(base).parts)` | `139 一级目录 → 139 发现项目`；2 条正反回归用例；`allin@3b0b407` |
 | P1 | 本机事实标注，避免误导他机 | ✅ 已验证 | 口径块 + 占位符 + 〔本机〕/〔通用〕 + 事实源上位判据，是跨项目写作规范 | 报告 §0、`README.md`、`docs/CLI.md` 口径块；用户级 `MEMORY.md` 写作铁律 |
-| P2 | 治理落地 | ✅ 已验证 | 版本控制 / 依赖声明 / 许可 / 安全 / 贡献 / 变更日志 / CI / SAST / registry 登记 | 样本仓 `6.0/0.442/error 4 → 10.0/1.0/error 0`；`g17` `146 条目 / 138 已登记 / 0 阻断` |
+| P2 | 治理落地 | ✅ 已验证 | 版本控制 / 依赖声明 / 许可 / 安全 / 贡献 / 变更日志 / CI / SAST / registry 登记 | 样本仓 `6.0/0.442/error 4 → 10.0/1.0/error 0`；`g17` 终态 `147 条目 / 138 已登记 / 0 阻断` |
 | P2′ | 工具侧第二处缺陷（规则 6） | ✅ 已验证 | 静态白名单必须让位于**项目自己的依赖声明**；不得为单仓硬编码包名 | `24 仓 fail→pass`、`0 回归`、`74 仍红`；3 条回归用例；`allin@67dc184` |
 | P3 | 全量复跑 + 建仓推送 + 报告 | ✅ 已验证 | 推送验收必须取权威远端证据（`ls-remote` + 匿名 clone 内容级比对），不凭 push 输出 | `20/20 clean`；`g04` 双远端 `IN_SYNC`；匿名 clone `32 文件` + blob sha 一致 |
 | — | `v0.1.0` tag 推送 | ✅ 已验证 | tag 必须回读 `refs/tags/*` 与 peeled 目标，不以本地存在为准 | `git ls-remote --tags` 回读成功；指向 `68532dc`（首个可校验版本），不含后续文档提交 |
@@ -185,10 +185,16 @@ def _declared_dependency_bases(ctx) -> set[str]:
 
 | 门禁 | 整改前 | 整改后 |
 |---|---|---|
-| `g17-registry` | `BLOCK repos/skyrim-lifeline: unregistered-repo` | `scanned 146 / registered 138 / blocking 0`，`rc=0` |
+| `g17-registry` | `BLOCK repos/skyrim-lifeline: unregistered-repo` | `scanned 147 / registered 138 / blocking 0`，`rc=0` |
 | `verify_projects.py --only skyrim-lifeline` | — | `T1 verify.command exit 0`（2.17s） |
 | `g04-push-evidence` | `DIVERGED` × 2（本地 `105eab0` / 远端 `71da92b`） | 双远端 `IN_SYNC d7b70d5`，`rc=0` |
 | `check:governance` | `18/20 clean` | **`20/20 clean`**，`rc=0` |
+
+> **数值订正（易踩坑）**：补登记后、rebase 前本地 `g17` 读到 `146` 条目；
+> rebase 到远端 `71da92b` 时带入了远端新增的 `piano.yaml`，终态变成
+> `147` 条目 / `138` 已登记 / `4` 条「无本地 clone」SKIP。
+> **SKIP 不是通过**；`blocking 0` 才是判据。这类计数随任一侧新增条目漂移，
+> 属时点值，报告统一采用终态复测数字。
 
 ---
 
