@@ -102,8 +102,8 @@ def candidates_for(scene: dict, mode: str, snapshot: dict | None = None) -> list
 def run(script: list[str], seed: int = SEED) -> tuple[str, dict]:
     """用真实引擎跑一段脚本，返回 (最终场景, 状态快照)。
 
-    ★ combat 插件用 `random.random()`（全局随机源），不受 engine.rng 控制。
-      必须同时固定全局 random 的种子，否则同一脚本两次跑会走出不同分支。
+    ★ 0.7.0 起 combat 走 engine.rng；老版用全局 random。两个种子都固定以
+      兼容两种引擎，否则同一脚本两次跑会走出不同分支。
     """
     os.environ["DSE_INPUT"] = ",".join(script)
     buf = io.StringIO()

@@ -78,9 +78,11 @@ frostwords install-cli         # 装好上面这个命令（Windows）
 dse export-html -o frostwords.html --title "霜语 · Frostwords"
 ```
 
-可导出单文件 HTML，离线通读全部场景文本。但引擎的 `export-html`
-**只实现 `normal` 模式**：本作 12 个 `battle` / `dialogue` / `trade` /
-`diary` 场景在浏览器端无插件接管，会显示提示并中断。
+可导出单文件 HTML，离线通读全部场景文本。`dse-core 0.7.0` 起导出器会读取
+`state.bounds` / `state.fatal`，并按 `readingExits` 为非 `normal` 的战斗 /
+对话 / 交易 / 日记场景提供**阅读版跳转**（不再显示提示后中断）—— 你可以在
+浏览器里沿着剧情线把文本读到底。但阅读版**不执行战斗判定、谈判结算、
+贸易行情等插件逻辑**，它只是「能走通文本分支的阅读稿」。
 **完整可玩请用 `dse play`** —— CLI 才是五种模式齐全的入口。
 
 ---
@@ -113,6 +115,12 @@ dse export-html -o frostwords.html --title "霜语 · Frostwords"
 
 **体温是唯一的硬死亡线。** 火堆、食物、正确的路线决定你能不能活到白漫。
 
+> **数值护栏（`dse-core>=0.7.0`）**：所有资源在每次结算后自动钳进 0 上限区间
+> （`trust` 0–100、`hp` 0–`maxHp` 等），不会再出现 `hp=-38 / trust=129` 这种
+> 越界值；第一章体温提前归零（`warmth<=0 and clock<=8`）会硬性改道冻死结局。
+> 死亡判定不取代你的最后选择 —— 重伤/惨胜仍由 `end-select` 并列呈现。
+> 详见 `docs/design.md` §3.1。
+
 ### 知识即选项
 
 有些选择只有**知道点什么**才能做对 —— 就像《生命线：Crisis Line》
@@ -132,8 +140,8 @@ dse export-html -o frostwords.html --title "霜语 · Frostwords"
 
 ## CLI：完整导出一次游戏流程
 
-`dse export-html` 只能导出**静态场景文本**，而且只支持 `normal` 模式。
-本项目的 `frostwords` 导出的是**一局真正玩下来的完整流程**：每个场景的正文、
+`dse export-html` 导出的是**静态场景文本**（0.7.0 起附阅读版出口，但不执行
+插件逻辑）。本项目的 `frostwords` 导出的是**一局真正玩下来的完整流程**：每个场景的正文、
 当时可见的选项、玩家的每一次输入、相邻场景的状态变化、终局状态。
 
 ### 装与用
@@ -162,8 +170,9 @@ frostwords play -- --entry core-open                      :: 转发 dse play
 | 数值轨迹 | 相邻场景状态快照做 diff，摊平为点路径，丢掉 `visits` / `onceSeen` 噪音 |
 
 **不模拟引擎语义**，全程跑真实引擎、只旁听事件，因此导出与 `dse play` 一致。
-两处必须隔离：`sdk.create_engine(entry=...)` 残留的 `DSE_ENTRY` 要清掉；
-combat 用全局 `random.random()`，必须同时固定 `engine.rng` 与 `random.seed()`。
+两处随机/环境隔离：`dse-core 0.7.0` 起 `create_engine(entry=...)` 不再写
+`DSE_ENTRY`，且 combat 随机源已改为 `engine.rng`；为兼容 0.6.x，导出器仍
+显式清 `DSE_ENTRY` 并同时固定 `engine.rng` 与全局种子。
 
 ### 产出
 
@@ -173,8 +182,9 @@ combat 用全局 `random.random()`，必须同时固定 `engine.rng` 与 `random
 | `.json` | 结构化 `meta` + `steps[]` + `final_state`，便于程序消费 | ~260 KB |
 | `.html` | 单文件阅读版，状态变化折叠 | ~118 KB |
 
-实测真结局：`51 场景步 / 62 次输入 / 51 不同场景 → end-whiterun`，
-模式分布 `normal 45 / dialogue 2 / battle 3 / trade 1`。
+实测真结局〔本机 `@SIWPAN` 时点，e2e 重建后〕：
+`52 场景步 / 65 次输入 / 52 不同场景 → end-whiterun`，
+模式分布 `normal 45 / dialogue 3 / battle 3 / trade 1`。
 输入次数大于场景步数，正是一个场景里连问多题、打多回合、走多天所致。
 
 > `export-outline` 是另一层「完整」：**全部 109 个场景**和每条出边的
@@ -285,14 +295,16 @@ python tools/solve_e2e.py --all --write-cases      # 全量求解并回写 tests
 
 违反 1–2 条不会让游戏出错，但会让 traverse 跑不完。
 
-> **随机性坑**：引擎 combat 插件用全局 `random.random()`，不受 `engine.rng`
-> 控制。`verify.py` / `solve_e2e.py` 都同时固定了全局种子，否则同一条
-> e2e 脚本两次跑会走出不同结局。
+> **随机性坑（0.7.0 已根治 combat，脚本仍双固定以兼容旧版）**：老版 combat
+> 用全局 `random.random()`，不受 `engine.rng` 控制；0.7.0 起改用 `engine.rng`。
+> `verify.py` / `solve_e2e.py` 都同时固定全局种子与 `engine.rng`，否则同一条
+> e2e 脚本两次跑会走出不同结局。升到 0.7.0 后旧脚本输入流曾整体错位
+> （7/8 停在 `ch2-tavern`），已全量重建 `tests/e2e_cases.json`。
 
-> **进程环境坑**：`sdk.create_engine(entry=...)` 会把 `DSE_ENTRY` 写进
-> `os.environ` 且**从不清理**。fuzz 按章起步后若不逐层清掉，后续 e2e 会
-> 从错误的入口开始，输入流整体错位（实测全部用例莫名停在中途的 `ch4-*`
-> 场景）。`verify.py` 在每个样本、每条用例前都做了显式隔离。
+> **进程环境坑（0.7.0 已根治）**：老版 `sdk.create_engine(entry=...)` 会把
+> `DSE_ENTRY` 写进 `os.environ` 且从不清理，fuzz 按章起步后残留值会让后续
+> e2e 从错误入口开始（实测全部用例停在中途 `ch4-*` 场景）。0.7.0 起改为
+> 注入 engine config、不再污染进程环境；`verify.py` 仍保留显式隔离作兼容保险。
 
 ### 验收基线（`@SIWPAN` 本机实测，他机数值不适用）
 
@@ -300,7 +312,7 @@ python tools/solve_e2e.py --all --write-cases      # 全量求解并回写 tests
 |---|---|---|
 | 静态图 | `dse check` | `109 场景 / 8 结局（可达 8）`，无悬空、无不可达 |
 | 引擎自检 | `dse doctor` | 健康 |
-| 全量门禁 | `python tools/verify.py` | `200 条随机路径`、`覆盖 87/109 场景 (80%)`、8 条 e2e 全过、8 个结局均 `SE`、`✓ 全部门禁通过` |
+| 全量门禁 | `python tools/verify.py` | `200 条随机路径`、`覆盖 89/109 场景 (82%)`、8 条 e2e 全过、8 个结局均 `SE`、`✓ 全部门禁通过` |
 | CLI 回归 | `python tests/cli_check.py` | `PASS 54  FAIL 0  SKIP 0` |
 | 全结局批量导出 | `frostwords export-run --all-endings --format md,json,html` | 8/8 结局成功，`48–52 场景步`，25 个文件共 `3,621,848 B` |
 | 跨目录调用 | 在 `C:\Windows` 下执行 PATH 垫片 `fwcli export-run` | `49 场景步 → end-alone`，`rc=0` |
@@ -308,6 +320,7 @@ python tools/solve_e2e.py --all --write-cases      # 全量求解并回写 tests
 | 跨仓实战校验（校验时点） | `<ALLIN_ROOT>` 的 `tools/repocheck` 扫 `<REPOS_ROOT>` | 〔本机〕暴露发现层假阴性 `139 只认出 138`、库级 `score 6.0 / 0.442 / error 4` |
 | 跨仓实战校验（整改后） | 同上 + 治理门禁 | 〔本机〕`139/139` 发现、样本 `score 10.0 / 1.0 / error 0`、规则 6 修复使 `24 仓转绿 / 0 回归`、`check:governance 20/20 clean` |
 | 建仓推送 | Gitee 私有 → 一次性 URL 推送 → 转公开 | 〔本机〕`ls-remote` 与本地 HEAD 一致、匿名 clone `32/32` 文件 + 3 份 blob sha 一致、`.git/config` 无凭据 |
+| 终局数值钳制 | `frostwords export-run --ending end-whiterun --format json` | 〔本机〕`hp=0 / soul=0 / stamina=0 / trust=100 / warmth=7 / clock=20`，全部落在 `bounds` 合法区间 |
 
 > `verify.py` 耗时是**时点值**（本机两次分别 `45.6s` / `78.5s`，差异来自并发负载），
 > 不作门禁断言；断言的是「全部门禁通过」与覆盖结果。

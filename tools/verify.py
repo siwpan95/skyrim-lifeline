@@ -271,10 +271,10 @@ def gate_fuzz(samples: int = 40, max_steps: int = 80,
 def run_e2e(case: dict, seed: int = 20261115) -> dict:
     """跑一条脚本化输入流，返回 {ok, scene, failures}。
 
-    ★ 关于随机性：引擎的 combat 插件用的是 `random.random()`（**全局随机源**），
-      不受 `engine.rng` 控制 —— 只设 engine.rng 无法复现战斗结果。
-      所以这里同时固定全局 random 的种子，否则同一脚本两次跑会走出不同分支
-      （实测：求解器当场复现通过的脚本，几分钟后同一脚本却走到别的结局）。
+    ★ 关于随机性：0.7.0 起 combat 走 `engine.rng`（dse.yml 的 seed 可复现），
+      老版本曾直接用全局 `random.random()`。这里两个种子都固定，向前兼容两种
+      引擎：既设 engine.rng 又设全局 random，保证跨版本脚本回放都可复现
+      （实测：只设一个种子时，同一脚本两次跑会走出不同分支）。
     """
     import contextlib
     import io as _io

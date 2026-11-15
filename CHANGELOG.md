@@ -4,6 +4,32 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-15
+
+### Changed
+
+- **数值平衡落地（反哺 `dse-core>=0.7.0`）**：`dse.yml` 新增
+  `state.bounds`（钳制 `hp/stamina/warmth/soul/trust/rations/gold` 七字段，
+  `max` 可引用 `maxHp`/`maxStamina`）与 `state.fatal`（早期体温失败分支
+  `warmth<=0 and clock<=8 → end-frozen`）。终结骨架阶段「终局资源为负、
+  trust 越界、死亡分支仅作候选」的问题；8 结局可达性经门禁复验不变。
+  设计取舍见 `docs/design.md` §3.1。
+- `tools/verify.py` / `tools/solve_e2e.py` 注释更新：0.7.0 combat 随机源
+  从全局 `random.random()` 改为 `engine.rng`；两处仍同时固定 `engine.rng`
+  与全局种子以兼容 0.6.x / 0.7.0。
+- `tests/e2e_cases.json` 全部 8 条用例用真实引擎重建（0.7.0 战斗结果变化
+  会导致旧输入流错位）。新步数：58/65/57/64/64/64/61/64。
+
+### Notes
+
+- 本仓数值平衡依赖 `dse-core>=0.7.0`（`state.bounds` / `state.fatal` /
+  combat RNG 隔离 / `create_engine` 不再污染 `DSE_ENTRY` / HTML 阅读版出口
+  均为 0.7.0 新能力）。0.7.0 已发布到 PyPI 并完成匿名安装验收，
+  详见引擎仓 `cordis-py` 0.7.0 变更与 PyPI 项目页。
+- 〔本机 `@SIWPAN` 时点实测〕`dse check` 109 场景 / 8 结局（可达 8）；
+  `verify.py` 200 条路径 / 覆盖 89/109 (82%) / 8 e2e 全过 / 8 结局 `SE`；
+  `tests/cli_check.py` PASS 54。换机 / 升级运行时后数值须现场复测。
+
 ## [0.1.0] - 2026-11-15
 
 ### Added
@@ -33,9 +59,11 @@
 
 ### Notes
 
-- 骨架阶段数值未平衡：终局资源可能为负，`trust` 未做 0–100 钳制，
-  缺硬性死亡分支。详见 `docs/design.md`「待办」。
-- `dse export-html` 只支持 `normal` 模式；完整可玩入口是 `dse play`。
+- ~~骨架阶段数值未平衡：终局资源可能为负，`trust` 未做 0–100 钳制，
+  缺硬性死亡分支。~~ **已于 0.2.0 解决**（`state.bounds` + `state.fatal`），
+  见上文与 `docs/design.md` §3.1。
+- `dse export-html` 在 0.7.0 起对非 `normal` 模式提供阅读版出口（见
+  `export_html` 的 `readingExits`）；完整可玩入口仍是 `dse play`。
 - `v0.1.0` git tag 已推送，指向「骨架 + 治理」提交 `68532dc`，**不含**其后的
   文档收口提交（有意保留「首个可校验版本」语义）。Gitee 发行版页 / 附件 / 发行
   说明尚未制作。

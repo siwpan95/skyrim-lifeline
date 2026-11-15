@@ -28,6 +28,33 @@
       - clues
       - flags
 
+    # ── 数值护栏（dse-core 0.7.0 新能力）────────────────────────
+    # 每一处 onEnter / do 的数值效果结算后自动钳进区间，内容作者不必在
+    # 每个场景手写 min/max。max 可引用另一字段（hp.max → maxHp），随装备
+    # /升级自动跟随。清理了旧版「hp=-38 / soul=-22 / trust=129」越界值。
+    # 注意：钳制不改变条件真假语义 —— end-select 的 hp<=4 / trust>=75
+    # 等门槛在钳制前后同样成立，8 结局可达性不受影响。
+    bounds:
+      hp:        { min: 0, max: maxHp }
+      stamina:   { min: 0, max: maxStamina }
+      warmth:    { min: 0, max: 100 }
+      soul:      { min: 0, max: 100 }
+      trust:     { min: 0, max: 100 }
+      rations:   { min: 0, max: 20 }
+      gold:      { min: 0, max: 9999 }
+
+    # ── 硬性死亡分支（dse-core 0.7.0 新能力）────────────────────
+    # 引擎在每场景 onEnter / 选项 do 结算后立即判定，命中即正规改道到目标
+    # 场景（先于渲染与结局判定），避免「血空了还在操作 / 无选项直接（完）」。
+    #
+    # 早期冻死：第一章（clock<=8）体温就归零 = 玩家连续选了暴露风雪的危险
+    # 路线，属真实可避的失败态。终局分流里 warmth<=12 → end-frozen 仍保留，
+    # 二者不冲突：8 条通关路径体温只在 clock>=17 才归零，不会触发早期线。
+    # 只设体温线、不设 hp<=0 线 —— 后者会误杀「惨胜」的正当通关路径。
+    fatal:
+      - when: 'warmth <= 0 and clock <= 8'
+        goto: end-frozen
+
     # 玩家状态初始值。
     #
     # 铁律：条件表达式（if:）里用到的每个顶层字段，必须在这里预声明，
