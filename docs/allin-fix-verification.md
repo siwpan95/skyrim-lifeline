@@ -3,6 +3,11 @@
 > **本报告是 P0 → P3 整改战役的最终验证结论**，取代
 > `docs/allin-repocheck-validation.md` 里所有「待授权 / 未改动 / 进行中」表述。
 > 校验时点的观测保留在那份报告里作为历史快照，不回写、不追平。
+>
+> **状态横幅（2026-11-15 后续批次）**：§1 / §6 中「74 仓规则 6 仍红」
+> 与「全量 `run_all_gates.sh` 未跑」已被同一天的后续批次转绿并实跑，
+> 详见 **§9 追加批次：规则 6 全绿与全量门禁**。旧行保留为历史时点记录，
+> 以 §9 为最终结论。数值平衡与 HTML 导出能力亦已在后续批次修复。
 
 ---
 
@@ -61,9 +66,11 @@
 | P2 | 治理落地 | ✅ 已验证 | 版本控制 / 依赖声明 / 许可 / 安全 / 贡献 / 变更日志 / CI / SAST / registry 登记 | 样本仓 `6.0/0.442/error 4 → 10.0/1.0/error 0`；`g17` 终态 `147 条目 / 138 已登记 / 0 阻断` |
 | P2′ | 工具侧第二处缺陷（规则 6） | ✅ 已验证 | 静态白名单必须让位于**项目自己的依赖声明**；不得为单仓硬编码包名 | `24 仓 fail→pass`、`0 回归`、`74 仍红`；3 条回归用例；`allin@67dc184` |
 | P3 | 全量复跑 + 建仓推送 + 报告 | ✅ 已验证 | 推送验收必须取权威远端证据（`ls-remote` + 匿名 clone 内容级比对），不凭 push 输出 | `20/20 clean`；`g04` 双远端 `IN_SYNC`；匿名 clone `32 文件` + blob sha 一致 |
+| P4（后续批次） | 74 仓规则 6 转绿 | ✅ 已验证 | 先分工具侧误报与各仓真实缺口；运行时注入模块用**可审计的仓内声明**，不造 pip 包、不编 `-e` 路径 | 〔本机〕`139 仓 / R6_red=0`；工具侧 4 提交；52 仓 manifest 提交，51 仓 local=remote |
+| P5（后续批次） | 全量 `run_all_gates.sh` | ✅ 已验证 | 门禁结论只认最终 summary，不以单项通过代替全量 | 〔本机〕`GATES_RC=0`；`ALLIN_GATE_SUMMARY status=clean fail=0 skips=0 not_applicable=0` |
 | — | `v0.1.0` tag 推送 | ✅ 已验证 | tag 必须回读 `refs/tags/*` 与 peeled 目标，不以本地存在为准 | `git ls-remote --tags` 回读成功；指向 `68532dc`（首个可校验版本），不含后续文档提交 |
 | — | 远端 CI 实跑 | ❌ **未验证** | GitHub Actions workflow 只在 GitHub 侧触发 | 本仓当前**只有 Gitee 远端**；本地 YAML 语法与等价门禁已过，runner 实跑未发生 |
-| — | 剧情数值平衡 | ❌ **未修** | 骨架阶段未平衡，属内容待办 | 〔本机〕真结局可出现 `hp=-38 / soul=-22 / warmth=5 / trust=129` |
+| — | 剧情数值平衡 | ✅ 已验证（后续批次） | 声明式 bounds + fatal 属引擎通用护栏，不靠改文案掩盖数值越界 | 〔本机〕7 字段钳制 + 早期体温 fatal；真结局 `hp=0/soul=0/trust=100`；详见 §9 与本仓 `design.md` §3.1 |
 
 ---
 
@@ -160,7 +167,7 @@ def _declared_dependency_bases(ctx) -> set[str]:
 | 发现项目 / 一级目录 | `139 / 139` |
 | 由 `fail → pass` 的仓 | **24**（含 `skyrim-lifeline`，另有 `pygame` / `jieba` / `openai` / `moviepy` 等合法声明） |
 | 由 `pass → fail` 的**回归** | **0** |
-| 修复后规则 6 仍报红 | **74**（各自依赖声明缺口或内部模块未声明，属各仓自身整改，不在本批次） |
+| 修复后规则 6 仍报红 | **74**（各自依赖声明缺口或内部模块未声明，属各仓自身整改，不在本批次）*→ 后续批次已清零，见 §9* |
 
 〔本机〕回归用例 3 条（已声明放行 / 未声明仍报红 / `requirements.txt` 也作事实源），
 `pytest tools/repocheck/` **70 项全绿**；`allin@67dc184`。
@@ -254,11 +261,11 @@ def _declared_dependency_bases(ctx) -> set[str]:
 | 远端 CI 实跑 | ❌ 未验证 | 本仓当前**只有 Gitee 远端**，`.github/workflows/verify.yml` 不会被触发；已验证的只是本地 YAML 语法 + 等价门禁。若后续建 GitHub 镜像，需回跑 runner 并补证据，不能现在写「CI 通过」 |
 | `v0.1.0` git tag | ✅ 已验证 | P2 建项时已在本地创建（指向 `68532dc`），本批补齐推送；〔本机〕`git ls-remote --tags` 回读到 `refs/tags/v0.1.0` 与 peeled 目标 `68532dc`。**tag 不含其后的文档收口提交**，这是有意保留「首个可校验版本」语义，不是漏推 |
 | Gitee release（发行版页 / 附件 / 发行说明） | ❌ 未做 | 本批范围是「建仓推送 + tag」不是「发版」；`CHANGELOG.md` 已有 `[0.1.0]` 口径，发行版属独立立项 |
-| 剧情数值平衡 | ❌ 未修 | 骨架阶段；需补硬性死亡分支与 `trust` 0–100 钳制。当前真结局可出现 `hp=-38 / soul=-22 / warmth=5 / trust=129` |
-| `dse export-html` 浏览器端 | ❌ 未修（引擎侧限制） | 只支持 `normal`；12 个 `battle/dialogue/trade/diary` 场景会中断。完整可玩入口仍是 `dse play` |
-| 发布区 74 仓规则 6 仍红 | ❌ 不在本批次 | 属各仓自身依赖声明缺口 / 内部模块未声明；工具缺陷已修，不能替各仓「补声明」来刷绿 |
+| 剧情数值平衡 | ✅ 已验证（后续批次） | 引擎侧 `state.bounds` + `state.fatal` 落地；〔本机〕真结局钳制后 `hp=0/soul=0/trust=100/warmth=7`。本表保留旧表述仅作时点快照，以 §9 与本仓 `design.md` §3.1 为准 |
+| `dse export-html` 浏览器端 | ✅ 已验证（后续批次） | `dse-core 0.7.0` 已加 readingExits 阅读版出口；旧结论「只支持 normal」已失效，见本仓 `README.md` |
+| 发布区 74 仓规则 6 仍红 | ✅ 已验证（后续批次） | 工具侧 4 轮精准化 + 52 仓按类补声明后权威复扫 `139 仓 / R6_red=0`；详见 §9 |
 | 规则 11 工具侧关键词表 | ❌ 有意不改 | 见 §4.3；内容侧已补小节，改工具会削弱语义区分度 |
-| 全量 `run_all_gates.sh` | ❌ 未跑 | 本批已跑 `check:governance`（20/20，含 `g20-facts`）、`repocheck` 全量测试与四层项目门禁；跨仓全量门禁属 allin 独立回归，不冒充已跑 |
+| 全量 `run_all_gates.sh` | ✅ 已验证（后续批次） | 〔本机〕最终实跑 `GATES_RC=0`、`ALLIN_GATE_SUMMARY status=clean fail=0 skips=0 not_applicable=0`；详见 §9 |
 
 ---
 
@@ -310,3 +317,108 @@ git clone --depth 1 https://gitee.com/siwpan/skyrim-lifeline.git <可写目录>/
 
 > 〔本机〕本表 hash 均为 `@SIWPAN` 上对应分支的时点值；rebase 会改写，
 > 他机一律以本地 `git log` 现场复测。
+
+---
+
+## §9 追加批次：规则 6 全绿与全量门禁（2026-11-15，同一天后续批次）
+
+### 9.1 目标与授权
+
+用户明确要求：`<REPOS_ROOT>` 中其余 74 仓规则 6 红灯转绿、全量 `run_all_gates.sh`
+实跑，且**先核对各仓远端状态**。随后逐项授权「全部 74 仓都要转绿」、
+「分类精准修复」、「授权批量 commit + push」、「逐仓核对远端后批量提交推送」。
+用户曾选择「全部补 `-e`」，但逐仓取证发现大量 manual 名**没有对应静态实体**，
+机械补 `-e` 会写入假依赖；因此改用可审计的 `# r6-local:` 仓内声明机制，
+不造 pip 包、不编造兄弟仓路径。该取舍属于对授权范围的诚实收窄。
+
+### 9.2 〔通用〕结论
+
+1. 规则 6 红灯必须先分成「工具侧误报」与「各仓真实声明缺口」两类；
+   不能用放白名单的方式把真实缺口刷绿。
+2. distribution 名与 import 名不一致（`pygame-ce → pygame`、
+   `PyExecJS → execjs`、`python-vlc → vlc`、`PyMuPDF → fitz` 等）需要显式别名表。
+3. namespace package / src-layout 目录、本地可编辑依赖 `-e <path>`、
+   以及运行时由 `sys.path` 注入且仓内无静态目录的模块，都需要被静态判据识别；
+   后者只能通过**该仓自己的显式声明**表达，不能做全局白名单。
+4. 提交推送前必须用 `git ls-remote` 判定远端领先 / 分叉 / 404；
+   远端领先只快进、分叉不强推、404 登记为远端不可用。
+5. 全量门禁结论只认最终 `ALLIN_GATE_SUMMARY`，单个子门禁通过不能冒充全量通过。
+
+### 9.3 〔本机 @SIWPAN 时点事实〕工具侧改动
+
+`<ALLIN_ROOT>` 上规则 6 共 4 次提交（均已在 `master` 推送）：
+
+| commit（@SIWPAN） | 内容 |
+|---|---|
+| `77826f40482c8305357e10e1c194f3b7b41e68f7` | 分布名→import 名别名矩阵、namespace 目录识别；刷新 facts 投影 |
+| `cd2f6f0daeec9136668824bce7b92b08d1ac6916` | 补 `3dworld`、`allin-engine`、`audioop-lts` 等别名 + src-layout 识别 |
+| `91276dc1af8da536233ef7aa167acdf8b0a3d8b2` | 补 `python-vlc → vlc`、`pyinstaller → PyInstaller`；LibreOffice 宿主模块 `uno` 不再误报 |
+| `ee1bf780d0a1d066ed7be8131a7702b85e01ff45` | 支持 `# r6-local:` + `PyExecJS → execjs`；规则 6 红灯归零 |
+
+`# r6-local:` 写法（仅在该仓根 `requirements*.txt` 中生效，非全局白名单）：
+
+```text
+# r6-local: core, save, shared
+```
+
+`tools/repocheck/test_scanner.py` 从 70 项扩到 **83 项全绿**，新增别名矩阵、
+`uno` 宿主模块、声明放行 / 未声明仍报红等回归。
+
+`<ALLIN_ROOT>` 的 `facts.json` 重新生成 **147 条** project 投影
+（此前 `skyrim-lifeline` 已登记但投影缺失，导致 3 项 facts 门禁同源失败）。
+`<REPOS_ROOT>/write` 的 `tools/bootstrap.ps1` 补 UTF-8 BOM 后提交
+`851384d0fd0ecfd41ea2131392fce8ae62277c8a`（@SIWPAN）并推送。
+
+### 9.4 〔本机 @SIWPAN 时点事实〕各仓声明补齐与推送
+
+改动 **52 仓**的 `requirements.txt`，覆盖三类（同一仓可含多类）：
+
+- **38 仓**真实 pip 缺口（`cryptography`、`ollama`、`sounddevice`、`python-vlc`、
+  `pygame-ce`、`pywin32` 等）；
+- **6 仓**真实存在的本地可编辑依赖（`-e ../bloodmusic`、`-e ../superengine`、
+  `-e ../dse-core`、`-e ../3dworld`、`-e ./battle_platform`、`-e ./core`、
+  `-e ./remix/tools` 等）；
+- **18 仓**运行时注入模块声明 `# r6-local: ...`（`core`、`save`、`gdb`、
+  `audio_core`、`cordis`、`rendering` 等）。
+
+批量提交消息统一为 `fix(gate): 规则6依赖声明补齐——pip缺口/r6-local本地模块/-e兄弟仓（allin实战校验 2026-11-15）`。
+推送结果：**44 仓直推 `master`、1 仓新建远端分支、6 仓改推 `main`、
+1 仓 `happy-childrens-day` 因 Gitee `404` 仅本地提交 `1f6a3702e09b`（@SIWPAN）**。
+
+终核时发现两处差异并按非破坏方式处理：
+
+- `3dworld-demos`：远端已有合并提交 `a014053`（@SIWPAN）包含我们的 `29f9805`，
+  本地 `git merge --ff-only origin/master` 快进，未改写历史；
+- `moba_battle_platform`：本地领先 1 提交，确认远端 `main` 存在且 `behind=0` 后
+  `git push origin main`，`36c9acb..4efe61f`（@SIWPAN）。
+
+最终对 52 仓逐一 `git ls-remote --heads origin` + `rev-parse HEAD` 核对：
+**51 仓 local HEAD = remote HEAD，1 仓 404 登记，MISMATCH = 0**。
+`media-tools` 有未跟踪的 `triangle.png`（@SIWPAN），未纳入提交，保持原样。
+
+### 9.5 〔本机 @SIWPAN 时点事实〕权威复扫与全量门禁
+
+```text
+<PYTHON> <ALLIN_ROOT>/tools/repocheck/main.py <REPOS_ROOT> --format json -o <OUT> --workers 4
+projects: 139 R6_red: 0
+```
+
+```text
+cd <ALLIN_ROOT> && bash scripts/run_all_gates.sh
+GATES_RC=0
+ALLIN_GATE_SUMMARY status=clean fail=0 skips=0 not_applicable=0
+全部门禁通过（环境不适用 0 项已如实标注，不计入通过）。
+```
+
+〔本机〕日志落点：`C:/Users/13122/AppData/Local/Temp/allin_gates_final.log`（@SIWPAN）。
+该次运行覆盖 `check_ps1_bom.py`、`repo_hygiene.py --all`、restore drill、
+`scan_hardcoded.ps1`、`smoke:e2e`（`8/8`）、内核测试（26 项）、
+规则 6 测试（83 项）与 CLI 测试；结论以最终 summary 为准。
+
+### 9.6 仍未验证项
+
+| 项 | 状态 | 理由 |
+|---|---|---|
+| `happy-childrens-day` 远端同步 | ❌ 远端不可用 | 〔本机〕Gitee `404 not found`；已本地提交，不做强推。远端恢复后需重新核对并推送 |
+| 远端 CI runner 实跑 | ❌ 未验证 | 见 §6；本地等价门禁与 YAML 语法已过，不能冒充 runner 通过 |
+| Gitee release 发行版 | ❌ 未做 | 独立立项，不在本批次授权范围 |

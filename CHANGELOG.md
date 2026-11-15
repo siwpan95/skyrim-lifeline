@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+### Docs
+
+- `docs/allin-fix-verification.md` 增补 §9「追加批次：规则 6 全绿与全量门禁」：
+  记录规则 6 从 74 红到 0 红的工具侧四轮修复、52 仓声明补齐与推送终核、
+  `# r6-local:` 机制、全量 `run_all_gates.sh` 实跑结论，并把 §1/§6 的
+  过时「未修/未跑」三态更新为 ✅（保留旧行作历史快照）。
+  〔本机 `@SIWPAN` 时点事实〕`139 仓 / R6_red=0`、
+  `ALLIN_GATE_SUMMARY status=clean fail=0`；他机须按 §0 占位符现场复测。
+
 ## [0.2.0] - 2026-11-15
 
 ### Changed

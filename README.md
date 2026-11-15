@@ -330,7 +330,8 @@ python tools/solve_e2e.py --all --write-cases      # 全量求解并回写 tests
 >
 > 本仓作为 `<ALLIN_ROOT>` 的实战校验样本，校验时点完整实测（复现代码、30 条规则
 > 明细、缺陷定位、假阳性分析）见 `docs/allin-repocheck-validation.md`；
-> **P0 → P3 整改的最终结论、三态与未修项见 `docs/allin-fix-verification.md`**。
+> **P0 → P3 整改的最终结论、三态与未修项见 `docs/allin-fix-verification.md`**；
+> 同日后续批次的「规则 6 全绿 + 全量 `run_all_gates.sh` 实跑」见该报告 **§9**。
 > 校验阶段刻意保留「无 `.git` / 无依赖声明 / 无 LICENSE」以复现漏检，
 > 该状态不代表当前工程状态；当前仓已纳入版本控制并推送到公开远端。
 
