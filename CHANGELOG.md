@@ -12,6 +12,11 @@
   过时「未修/未跑」三态更新为 ✅（保留旧行作历史快照）。
   〔本机 `@SIWPAN` 时点事实〕`139 仓 / R6_red=0`、
   `ALLIN_GATE_SUMMARY status=clean fail=0`；他机须按 §0 占位符现场复测。
+- §9.7 补记：远端 404 的 `happy-childrens-day` 是已收拢进 `arcade`
+  并归档进 `game-prototypes` 的墓碑仓，非待处理异常。其
+  `sounddevice` / `soundfile` 声明已在 `arcade` 与 `game-prototypes` 两个
+  有效落点存在；本地冗余仓备份后送回收站。删除后复扫
+  〔本机 `@SIWPAN`〕`projects: 138 R6_red: 0`。
 
 ## [0.2.0] - 2026-11-15
 

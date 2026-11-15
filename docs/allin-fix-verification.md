@@ -422,3 +422,40 @@ ALLIN_GATE_SUMMARY status=clean fail=0 skips=0 not_applicable=0
 | `happy-childrens-day` 远端同步 | ❌ 远端不可用 | 〔本机〕Gitee `404 not found`；已本地提交，不做强推。远端恢复后需重新核对并推送 |
 | 远端 CI runner 实跑 | ❌ 未验证 | 见 §6；本地等价门禁与 YAML 语法已过，不能冒充 runner 通过 |
 | Gitee release 发行版 | ❌ 未做 | 独立立项，不在本批次授权范围 |
+
+### 9.7 口径修正：归档冗余仓 `happy-childrens-day`（同日补记）
+
+用户指出：**`happy-childrens-day` 远端 404 不是异常**，而是 2026-10-29
+已收拢进 `arcade/games/sixone`；其 README 也明确写着「已收入归档仓
+`game-prototypes`，原仓冻结不再开发」。因此该本地仓属于完全冗余，
+不该按「404 仓」登记为待处理项。
+
+〔通用〕结论：遇到远端 404 / 本地仓存在时，先读 README 的归档声明与
+`<ALLIN_ROOT>/docs/事实源/组合分级决策索引.md`，判断是否是
+**已收拢的墓碑仓**；不要仅凭 `ls-remote` 就登记为异常，更不要给冻结仓补声明。
+
+〔本机 @SIWPAN 时点事实〕处置：
+
+1. 确认 `happy-childrens-day` 本轮唯一改动是新增
+   `requirements.txt` 中的 `sounddevice` / `soundfile`；
+   该声明已在 **两个有效落点**存在：`arcade/requirements.txt`
+   （`c8a5c87`）与 `game-prototypes/requirements.txt`（`af57aa1`），
+   且两仓规则 6 均为 pass。**改动已落位，无需再补。**
+2. 备份整个本地仓到 `%TEMP%/archived-repos-backup-20261115-2143`
+   （16 个同型归档仓一并备份，685 MB，`requirements.txt` 哈希逐一核对一致），
+   再用 `SHFileOperationW` + `FOF_ALLOWUNDO` 送回收站；
+   原 `D:\projects\repos\happy-childrens-day` 已不存在。
+3. 审计发现本轮 52 仓中另有 **15 个** README 带同一归档声明
+   （`arcade` / `ashen-beacon` / `daily_player` / `fish` / `lonely-desert-road` /
+   `mahjong` / `mc-clone` / `mcclone3d` / `music-player` / `pomodmer` /
+   `random-dungeon-` / `sandbox` / `text-fps` / `under-withered-limbs` / `yasuo`），
+   分别归档进 `game-prototypes` / `players-unified` / `dev-toolkit`。
+   这些**已从备份原样还原**，未删除；用户本次明确要删的只有 `happy-childrens-day`。
+4. 删除后权威复扫：
+
+   ```text
+   projects: 138 R6_red: 0
+   ```
+
+   §9.5 的 `139` 是删除前时点值，二者都成立；**当前终态以 138 为准**。
+   52 仓的提交历史仍有效，只是本地工作树少了 1 个冗余墓碑仓。
