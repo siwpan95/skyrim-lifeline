@@ -458,4 +458,8 @@ ALLIN_GATE_SUMMARY status=clean fail=0 skips=0 not_applicable=0
    ```
 
    §9.5 的 `139` 是删除前时点值，二者都成立；**当前终态以 138 为准**。
-   52 仓的提交历史仍有效，只是本地工作树少了 1 个冗余墓碑仓。
+   删除后重跑全量门禁仍为 `GATES_RC=0`、
+   `ALLIN_GATE_SUMMARY status=clean fail=0 skips=0 not_applicable=0`
+   〔本机 `@SIWPAN`，日志 `%TEMP%/allin_gates_after_happy_removal.log`〕。
+   52 仓的提交历史仍有效，只是本地工作树少了 1 个冗余墓碑仓；
+   剩余 51 仓远端复核仍全部 `local HEAD = remote HEAD`。

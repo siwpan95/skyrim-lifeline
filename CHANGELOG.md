@@ -16,7 +16,8 @@
   并归档进 `game-prototypes` 的墓碑仓，非待处理异常。其
   `sounddevice` / `soundfile` 声明已在 `arcade` 与 `game-prototypes` 两个
   有效落点存在；本地冗余仓备份后送回收站。删除后复扫
-  〔本机 `@SIWPAN`〕`projects: 138 R6_red: 0`。
+  〔本机 `@SIWPAN`〕`projects: 138 R6_red: 0`，全量门禁复跑仍为
+  `status=clean fail=0`。
 
 ## [0.2.0] - 2026-11-15
 
