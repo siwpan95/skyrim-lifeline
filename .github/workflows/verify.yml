@@ -22,14 +22,20 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install engine
-        run: python -m pip install "dse-core>=0.6.0,<0.7"
+      - name: Install engine and SAST tool
+        run: python -m pip install "dse-core>=0.7.0" semgrep
+
+      - name: Record engine version
+        run: python -m pip show dse-core
 
       - name: Static check
         run: dse check
 
+      - name: SAST (semgrep)
+        run: semgrep scan --config .semgrep.yml --error tools/
+
       - name: Four-layer gates
-        run: python tools/verify.py --fast
+        run: python tools/verify.py
 
       - name: CLI regression
         run: python tests/cli_check.py
