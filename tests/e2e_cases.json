@@ -3,13 +3,19 @@
     "name": "结局 · 她独自走完",
     "script": "1,1,1,1,1,ask 1,ask 2,end,1,1,1,1,1,a,a,a,2,1,1,1,3,2,1,1,ask 1,ask 2,ask 3,end,1,1,1,1,1,a,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,5",
     "expect_scene": "end-alone",
-    "expect": []
+    "expect": [
+      "not flags.metTrader",
+      "flags.sawDragon and flags.refusedAdvice"
+    ]
   },
   {
     "name": "结局 · 被龙吞",
     "script": "1,1,1,1,1,ask 1,ask 2,end,1,1,3,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 1,ask 2,ask 3,end,1,1,ask 1,ask 2,end,1,1,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,3",
     "expect_scene": "end-dragon",
-    "expect": []
+    "expect": [
+      "flags.metTrader",
+      "flags.sawDragon and flags.refusedAdvice"
+    ]
   },
   {
     "name": "结局 · 屠龙者",
@@ -39,13 +45,21 @@
     "name": "结局 · 断线",
     "script": "1,1,1,1,1,ask 1,ask 2,end,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 1,ask 2,ask 3,end,1,1,ask 1,ask 2,end,1,1,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,6",
     "expect_scene": "end-refused",
-    "expect": []
+    "expect": [
+      "warmth > 0",
+      "flags.metTrader",
+      "flags.sawDragon and flags.refusedAdvice",
+      "not flags.bribedGuard and not flags.keptSecret"
+    ]
   },
   {
     "name": "结局 · 被举报告发",
     "script": "1,1,1,1,1,ask 1,ask 2,end,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 4,ask 1,ask 2,end,1,1,ask 1,ask 2,end,1,1,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,2",
     "expect_scene": "end-soldiers",
-    "expect": []
+    "expect": [
+      "flags.bribedGuard",
+      "not flags.keptSecret"
+    ]
   },
   {
     "name": "隐藏结局 · 龙吼",

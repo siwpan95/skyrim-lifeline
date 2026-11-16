@@ -89,7 +89,8 @@ def test_usage() -> None:
     ]
     for args, needle in cases:
         rc, so, se = run(args)
-        check(f"用法错误 rc=2 {args[:2]}", rc == 2,
+        check(f"用法错误 rc=2 {args[:2]}",
+              rc == 2 and (needle in so or needle in se),
               f"rc={rc} stdout={so[:80]!r} stderr={se[:120]!r}")
     rc, _, se = run(["export-runn"])
     check("未知命令带拼写建议", "export-run" in se, se[:120])
@@ -139,25 +140,26 @@ def test_shims() -> None:
 
     with tempfile.TemporaryDirectory() as tmp:
         d = Path(tmp)
-        S.write_root_shims()
+        for name in S.NAMES:
+            S.write_shim(d / name, 'set "FW_ROOT=%~dp0"')
         # 生成一份"绝对 root"垫片，验证两份只差 root 行
-        abs_path = d / "frostwords.cmd"
+        abs_path = d / "frostwords_abs.cmd"
         S.write_shim(abs_path, S.root_line_for(ROOT))
         for name in S.NAMES:
-            p = ROOT / name
+            p = d / name
             r = shim_bytes(p)
             check(f"{name} ASCII / CRLF 合法",
                   r["ascii"] and r["bare_lf"] == 0 and r["lone_cr"] == 0,
                   str(r))
             check(f"{name} 调用行加引号 + 标记",
                   r["quoted_call"] and r["marker"], str(r))
-        a = (ROOT / S.NAMES[0]).read_bytes().decode("ascii").splitlines()
+        a = (d / S.NAMES[0]).read_bytes().decode("ascii").splitlines()
         b = abs_path.read_bytes().decode("ascii").splitlines()
         diff = [(x, y) for x, y in zip(a, b) if x != y]
         check("两份垫片仅 root 行不同", len(diff) == 1 and "FW_ROOT" in diff[0][0],
               str(diff))
         # 真 encode("ascii") 兜底断言（inspect 内部已 decode，这里再钉一次）
-        raw = (ROOT / S.NAMES[0]).read_bytes()
+        raw = (d / S.NAMES[0]).read_bytes()
         try:
             raw.decode("ascii")
             ascii_ok = True
@@ -248,7 +250,7 @@ def test_install_uninstall() -> None:
               f"rc={rc} {so[:120]}")
         check("dry-run 不写目标文件", not (d / "frostwords.cmd").exists())
 
-        rc, so, se = run(["install-cli", "--shim-dir", str(d), "-q"])
+        rc, so, se = run(["install-cli", "--shim-dir", str(d), "--no-root", "-q"])
         check("install rc=0", rc == 0 and (d / "frostwords.cmd").exists(),
               f"rc={rc} {se[:120]}")
 

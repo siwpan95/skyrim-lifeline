@@ -142,13 +142,26 @@ def gate_declared_fields() -> list[str]:
     used: set[str] = set()
     project = load_project(ROOT)
     exprs: list[str] = []
-    for sid, sc in project.dict.items():
-        for c in (sc.get("choices") or []):
-            if c.get("if"):
-                exprs.append(str(c["if"]))
-        for key in ("if", "when", "condition"):
-            if sc.get(key):
-                exprs.append(str(sc[key]))
+
+    def collect(node) -> None:
+        """递归收集所有条件键（if / when / condition）的表达式。
+
+        覆盖 dialogue.topics[].if、extraText[].if、fatal.when 等嵌套位置；
+        只认条件键，不把普通文本或 do 效果误当表达式。
+        """
+        if isinstance(node, dict):
+            for key, val in node.items():
+                if key in ("if", "when", "condition") and isinstance(val, str):
+                    exprs.append(val)
+                else:
+                    collect(val)
+        elif isinstance(node, list):
+            for item in node:
+                collect(item)
+
+    collect(cfg)
+    for sc in project.dict.values():
+        collect(sc)
     for e in exprs:
         used |= {f"{ns}.{k}" for ns, k in
                  re.findall(r"\b(flags|clues|items)\.([A-Za-z_][A-Za-z0-9_]*)", e)}
@@ -339,6 +352,7 @@ def run_e2e(case: dict, seed: int = 20261115) -> dict:
         return {"ok": not failures, "scene": engine.current, "failures": failures}
     finally:
         os.environ.pop("DSE_INPUT", None)
+        os.environ.pop("DSE_ENTRY", None)
 
 
 def gate_e2e() -> tuple[list[str], set[str]]:
@@ -361,7 +375,11 @@ def gate_e2e() -> tuple[list[str], set[str]]:
 
 # ── ④ 结局覆盖门 ───────────────────────────────────────────────
 def gate_coverage(covered: set[str]) -> list[str]:
-    """结局覆盖门：每个结局须有静态可达(S) 或 e2e 已回放(E) 来源。"""
+    """结局覆盖门：每个结局必须有 e2e 回放来源(E)，静态可达(S)仅作附加证据。
+
+    历史教训：仅凭 S 即判通过时，曾出现 9 条 e2e 全部失败但覆盖门全绿的
+    假阳性——「静态可达」证明的是图结构，不是通关脚本仍然有效。
+    """
     _hr("④ 结局覆盖门（coverage）")
     problems: list[str] = []
     project = load_project(ROOT)
@@ -375,11 +393,11 @@ def gate_coverage(covered: set[str]) -> list[str]:
             src.append("S")   # 静态可达
         if eid in covered:
             src.append("E")   # e2e 已回放验证
-        if src:
+        if "E" in src:
             _ok(f"{eid:<22} 来源 {''.join(src)}")
         else:
-            _fail(f"{eid:<22} 无任何验证来源")
-            problems.append(f"结局 {eid} 无验证来源")
+            _fail(f"{eid:<22} 缺少 e2e 回放来源（当前 {''.join(src) or '无'}）")
+            problems.append(f"结局 {eid} 缺少 e2e 回放来源")
     return problems
 
 

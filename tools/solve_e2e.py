@@ -248,6 +248,14 @@ EXPECT: dict[str, list[str]] = {
     "end-thu-um": ["clues.thuUm"],
     "end-mercy": ["hp <= 4"],
     "end-dragon-slayer": ["flags.absorbedSoul"],
+    "end-alone": ["not flags.metTrader",
+                  "flags.sawDragon and flags.refusedAdvice"],
+    "end-dragon": ["flags.metTrader",
+                   "flags.sawDragon and flags.refusedAdvice"],
+    "end-refused": ["warmth > 0", "flags.metTrader",
+                    "flags.sawDragon and flags.refusedAdvice",
+                    "not flags.bribedGuard and not flags.keptSecret"],
+    "end-soldiers": ["flags.bribedGuard", "not flags.keptSecret"],
 }
 
 
@@ -290,9 +298,11 @@ def main() -> int:
         results[t] = script
         print(f"✓ {t:<22} {len(script):>3} 步: \"{','.join(script)}\"")
     if results:
-        print("\n--- E2E_CASES ---")
-        for t, s in results.items():
-            print(f'    {{"name": "{t}", "script": "{",".join(s)}", "expect_scene": "{t}"}},')
+        print("\n--- E2E_CASES（格式同 tests/e2e_cases.json）---")
+        for t, s in sorted(results.items()):
+            item = {"name": ENDINGS.get(t, t), "script": ",".join(s),
+                    "expect_scene": t, "expect": EXPECT.get(t, [])}
+            print("    " + json.dumps(item, ensure_ascii=False) + ",")
     if results and args.write_cases:
         path = write_cases(results)
         print(f"\n已写入 {len(results)} 条用例 → {path.relative_to(ROOT)}")
