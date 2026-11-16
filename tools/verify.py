@@ -162,17 +162,49 @@ def gate_declared_fields() -> list[str]:
 
 
 # ── ② 动态随机游走采样 ───────────────────────────────────────
-def _candidates_for(scene: dict, mode: str, asked: set[str]) -> list[str]:
-    """按场景声明列合法输入（引擎会拒绝非法输入并等待下一个，不会崩）。"""
+def _visible_by_if(items: list, snapshot: dict) -> list:
+    """按引擎口径过滤 `if`：evaluate 对快照求值，异常兜底 False。"""
+    from dse_core.safety import evaluate
+    out = []
+    for item in items:
+        cond = item.get("if")
+        ok = True
+        if cond:
+            try:
+                ok = bool(evaluate(cond, snapshot))
+            except Exception:
+                ok = False
+        if ok:
+            out.append(item)
+    return out
+
+
+def _candidates_for(scene: dict, mode: str, asked: set[str],
+                    snapshot: dict | None = None) -> list[str]:
+    """按场景声明列合法输入（引擎会拒绝非法输入并等待下一个，不会崩）。
+
+    0.3.1：normal / dialogue 候选都改按引擎 visible() 口径（if 过滤后重编号），
+    与 render / do_ask 一致；此前按原始列表全量编号会与门控项错位。
+    """
+    snap = snapshot or {}
     if mode == "normal":
-        return [str(i + 1) for i in range(len(scene.get("choices") or []))]
+        return [str(i + 1) for i, _ in
+                enumerate(_visible_by_if(scene.get("choices") or [], snap))]
     if mode == "battle":
         return ["a", "d", "r"]
     if mode == "dialogue":
-        topics = (scene.get("dialogue") or {}).get("topics") or []
-        outs = [f"ask {i + 1}" for i, t in enumerate(topics)
-                if t.get("id") not in asked]
-        return outs + ["end"]
+        dlg = scene.get("dialogue") or {}
+        topics = dlg.get("topics") or []
+        visible = [t for t in _visible_by_if(topics, snap)
+                   if t.get("id") not in asked]
+        outs = [f"ask {i + 1}" for i, _ in enumerate(visible)] + ["end"]
+        # 注意点用尽后只给 end（引擎会把任何 ask 当「用尽→结束」消费）。
+        notes = dlg.get("notes") or 0
+        if notes > 0:
+            topic_ids = {t.get("id") for t in topics}
+            if len(topic_ids & asked) >= notes:
+                return ["end"]
+        return outs
     if mode == "trade":
         return ["next", "buy 1", "sell 1", "info"]
     if mode == "diary":
@@ -228,7 +260,8 @@ def gate_fuzz(samples: int = 40, max_steps: int = 80,
                     return                      # 不再注入 → 输入耗尽 → 退出
                 mode = (sc or {}).get("mode") or "normal"
                 asked = set(_ctx.services["state"].get("dialogueAsked") or [])
-                cands = _candidates_for(sc or {}, mode, asked)
+                snap = _ctx.services["state"].snapshot()
+                cands = _candidates_for(sc or {}, mode, asked, snap)
                 if cands:
                     _io.scripted.insert(0, _rng.choice(cands))
 

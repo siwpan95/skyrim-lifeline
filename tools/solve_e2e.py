@@ -80,19 +80,54 @@ GOALS: dict[str, list[tuple[str, object]]] = {
 
 
 # ── 候选输入（只按场景声明列合法输入，不猜引擎语义）────────────
+def _visible_by_if(items: list, snapshot: dict) -> list:
+    """按引擎口径过滤 `if`：evaluate 对快照求值，异常兜底 False。"""
+    from dse_core.safety import evaluate
+    out = []
+    for item in items:
+        cond = item.get("if")
+        ok = True
+        if cond:
+            try:
+                ok = bool(evaluate(cond, snapshot))
+            except Exception:
+                ok = False  # 与引擎 check 的异常兜底 False 一致
+        if ok:
+            out.append(item)
+    return out
+
+
 def candidates_for(scene: dict, mode: str, snapshot: dict | None = None) -> list[str]:
+    snap = snapshot or {}
     if mode == "normal":
-        return [str(i + 1) for i in range(len(scene.get("choices") or []))]
+        # ★ 0.3.1：引擎 render 只渲染 if 为真的选项并重编号；此前按原始
+        #   choices 全量编号会与门控选项错位（求解器靠「非法输入原地不动」
+        #   歪打正着跳过，但语义不可靠）。改为与引擎一致的可见列表口径。
+        return [str(i + 1) for i, _ in
+                enumerate(_visible_by_if(scene.get("choices") or [], snap))]
     if mode == "battle":
         return ["a", "d", "r"]
     if mode == "dialogue":
         dlg = scene.get("dialogue") or {}
         topics = dlg.get("topics") or []
-        asked = set((snapshot or {}).get("dialogueAsked") or [])
-        # ★ 引擎的 do_ask：已问过的话题会被直接拒绝（不推进流程）。
-        #   候选里必须排除已问过的，否则会原地打转。
-        outs = [f"ask {i + 1}" for i, t in enumerate(topics)
-                if t.get("id") not in asked]
+        asked = set(snap.get("dialogueAsked") or [])
+        # ★ 0.3.1：引擎 do_ask 的编号来自 visible()——先按 `if` 过滤、
+        #   再 enumerate 重排。此前这里按原始 topics 全量编号，遇到门控话题
+        #   （如 core-ask 的 why/listener）会与引擎口径错位，产出的 ask N
+        #   语义名不副实（歪打正着能跑通，但一旦改门槛就崩）。
+        visible = [t for t in _visible_by_if(topics, snap)
+                   if t.get("id") not in asked]
+        outs = [f"ask {i + 1}" for i, _ in enumerate(visible)]
+        # ★ 0.3.1：注意点用尽后，引擎会把任何 ask 当作「用尽→结束」消费，
+        #   那是假提问；此时只给 end 收尾，避免录进无效输入、也避免 end 溢出
+        #   到下一场景。未用尽时保留 ask 在前（带信任等效果、分数更高会被选中），
+        #   end 殿后，保证对话内容不会被过早跳过。
+        notes = dlg.get("notes") or 0
+        if notes > 0:
+            topic_ids = {t.get("id") for t in topics}
+            used_here = len(topic_ids & asked)
+            if used_here >= notes:
+                return ["end"]
         outs.append("end")
         return outs
     if mode == "trade":

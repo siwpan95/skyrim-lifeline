@@ -1,19 +1,19 @@
 [
   {
     "name": "结局 · 她独自走完",
-    "script": "1,1,1,1,1,ask 1,ask 2,ask 3,1,1,1,1,1,a,a,a,2,1,1,1,3,2,1,1,ask 1,ask 2,ask 3,ask 4,1,1,1,1,1,a,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,5",
+    "script": "1,1,1,1,1,ask 1,ask 2,end,1,1,1,1,1,a,a,a,2,1,1,1,3,2,1,1,ask 1,ask 2,ask 3,end,1,1,1,1,1,a,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,5",
     "expect_scene": "end-alone",
     "expect": []
   },
   {
     "name": "结局 · 被龙吞",
-    "script": "1,1,1,1,1,ask 1,ask 2,ask 3,1,1,3,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 1,ask 2,ask 3,ask 4,1,1,ask 1,ask 2,ask 3,end,1,1,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,3",
+    "script": "1,1,1,1,1,ask 1,ask 2,end,1,1,3,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 1,ask 2,ask 3,end,1,1,ask 1,ask 2,end,1,1,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,3",
     "expect_scene": "end-dragon",
     "expect": []
   },
   {
     "name": "结局 · 屠龙者",
-    "script": "1,1,1,1,1,ask 2,ask 4,ask 1,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 1,ask 2,ask 3,ask 4,1,1,ask 1,ask 2,ask 3,end,1,1,1,a,a,a,1,1,1,1,1,4,1,1,1,1,1,1,1,1,1,1,4",
+    "script": "1,1,1,1,1,ask 4,ask 2,end,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 1,ask 2,ask 3,end,1,1,ask 1,ask 2,end,1,1,1,a,a,a,1,1,1,1,1,4,1,1,1,1,1,1,1,1,1,1,4",
     "expect_scene": "end-dragon-slayer",
     "expect": [
       "flags.absorbedSoul"
@@ -21,7 +21,7 @@
   },
   {
     "name": "结局 · 冻死在雪里",
-    "script": "1,1,1,1,1,ask 1,ask 2,ask 3,1,3,1,1,2,1,2,2,1,2,2,2,1,2,1,ask 1,ask 2,ask 3,ask 4,1,1,2,1,2,1,a,a,a,1,2,2,1,3,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,2",
+    "script": "1,1,1,1,1,ask 1,ask 2,end,1,3,1,1,2,1,2,2,1,2,2,2,1,2,1,ask 1,ask 2,ask 3,end,1,1,2,1,2,1,a,a,a,1,2,2,1,3,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,2",
     "expect_scene": "end-frozen",
     "expect": [
       "warmth <= 12"
@@ -29,7 +29,7 @@
   },
   {
     "name": "翻转结局 · 她死了，但事办成了",
-    "script": "1,1,1,1,1,ask 2,ask 1,ask 3,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 1,ask 2,ask 3,ask 4,1,1,ask 1,ask 2,ask 3,end,1,1,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,1",
+    "script": "1,1,1,1,1,ask 2,ask 1,end,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 1,ask 2,ask 3,end,1,1,ask 1,ask 2,end,1,1,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,1",
     "expect_scene": "end-mercy",
     "expect": [
       "hp <= 4"
@@ -37,19 +37,19 @@
   },
   {
     "name": "结局 · 断线",
-    "script": "1,1,1,1,1,ask 1,ask 2,ask 3,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 1,ask 2,ask 3,ask 4,1,1,ask 1,ask 2,ask 3,end,1,1,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,6",
+    "script": "1,1,1,1,1,ask 1,ask 2,end,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 1,ask 2,ask 3,end,1,1,ask 1,ask 2,end,1,1,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,6",
     "expect_scene": "end-refused",
     "expect": []
   },
   {
     "name": "结局 · 被举报告发",
-    "script": "1,1,1,1,1,ask 1,ask 2,ask 3,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 4,ask 1,ask 2,ask 3,1,1,ask 1,ask 2,ask 3,end,1,1,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,2",
+    "script": "1,1,1,1,1,ask 1,ask 2,end,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 4,ask 1,ask 2,end,1,1,ask 1,ask 2,end,1,1,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,2",
     "expect_scene": "end-soldiers",
     "expect": []
   },
   {
     "name": "隐藏结局 · 龙吼",
-    "script": "1,1,1,1,1,ask 1,ask 2,ask 3,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 5,ask 1,ask 2,ask 3,1,2,1,1,1,a,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,2",
+    "script": "1,1,1,1,1,ask 4,ask 1,end,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,2,1,1,ask 1,ask 2,ask 3,end,1,1,ask 1,ask 2,end,1,3,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,2",
     "expect_scene": "end-thu-um",
     "expect": [
       "clues.thuUm"
@@ -57,7 +57,7 @@
   },
   {
     "name": "真结局 · 走进白漫",
-    "script": "1,1,1,1,1,ask 1,ask 2,ask 3,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 1,ask 2,ask 3,ask 4,1,1,ask 1,ask 2,ask 3,end,1,1,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,4",
+    "script": "1,1,1,1,1,ask 1,ask 2,end,1,1,1,1,1,a,a,a,1,1,1,1,1,1,next,next,1,1,1,ask 1,ask 2,ask 3,end,1,1,ask 1,ask 2,end,1,1,1,a,a,a,1,1,1,1,1,1,1,1,a,1,1,1,1,1,1,1,1,1,1,1,4",
     "expect_scene": "end-whiterun",
     "expect": [
       "trust >= 65"
