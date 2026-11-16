@@ -41,6 +41,12 @@ from dse_core.loader import load_project                     # noqa: E402
 from dse_core.sdk import create_engine                       # noqa: E402
 
 DEFAULT_SEED = 20261115
+
+
+def _generated_at() -> str:
+    """导出时间戳；设置 FW_GENERATED_AT 可固定为同一值，便于逐字节复现。"""
+    return (os.environ.get("FW_GENERATED_AT")
+            or datetime.now().isoformat(timespec="seconds"))
 CASES_FILE = ROOT / "tests" / "e2e_cases.json"
 EXPORT_DIR = ROOT / "exports"
 
@@ -198,7 +204,7 @@ def capture(script: list[str], seed: int = DEFAULT_SEED,
         "meta": {
             "project": "霜语 · Frostwords",
             "engine": f"dse-core {engine_version()}",
-            "generated_at": datetime.now().isoformat(timespec="seconds"),
+            "generated_at": _generated_at(),
             "seed": seed,
             "label": label,
             "script": ",".join(str(x) for x in script),

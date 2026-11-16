@@ -60,7 +60,7 @@ frostwords - 霜语 · Frostwords 命令行工具
   help <命令>      查看详细帮助
 
 全局选项:
-  --json           把结果摘要以 JSON 打印到 stdout
+  --json           把结果摘要以 JSON 打印到 stdout（转发命令 play/verify 不支持）
   -q, --quiet      只打印错误
   --version        显示版本
   -h, --help       显示本帮助
@@ -90,7 +90,7 @@ frostwords export-run - 完整导出一次游戏流程
   --output PATH      输出文件；多格式时按 stem 加各自后缀
                      （默认 exports/playthrough-<结局>.<后缀>）
   --seed N           随机种子，正整数（默认 20261115）
-  --all-endings      为全部 8 个结局各导出一份（忽略 --output / --script）
+  --all-endings      为全部 9 个结局各导出一份（忽略 --output / --script）
 
 说明:
   · 采集全程跑真实引擎，只是旁听 scene/enter 与 io.ask，不参与推进，
@@ -358,10 +358,13 @@ def cmd_install(args: list[str], opts: Options) -> dict:
     ap.add_argument("--shim-dir")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--add-to-path", action="store_true")
+    ap.add_argument("--no-root", action="store_true",
+                    help="不写仓库根垫片（测试/CI 用，避免污染工作树）")
     ns = ap.parse_args(args)
     import cli_shim
     d = Path(ns.shim_dir).expanduser() if ns.shim_dir else None
-    return cli_shim.install(d, dry_run=ns.dry_run, modify_path=ns.add_to_path)
+    return cli_shim.install(d, dry_run=ns.dry_run, modify_path=ns.add_to_path,
+                            write_root=not ns.no_root)
 
 
 def cmd_uninstall(args: list[str], opts: Options) -> dict:
