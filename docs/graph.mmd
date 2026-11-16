@@ -62,6 +62,7 @@ flowchart LR
   n_ch2_thane_talk["第二章 · 悬崖上"]
   n_ch2_thane_verdict("第二章 · 三天")
   n_ch2_thane_fight("第二章 · 猎龙人")
+  n_ch2_thalmor("第二章 · 白袍")
   n_ch3_open("第三章 · 根")
   n_ch3_bones("第三章 · 摆过的骨头")
   n_ch3_retreat("第三章 · 退回门口")
@@ -81,6 +82,8 @@ flowchart LR
   n_ch3_oath("第三章 · 誓")
   n_ch3_south("第三章 · 南下")
   n_ch3_fire_watch("第三章 · 火的方向")
+  n_ch3_loop_gate("第三章 · 再来一次")
+  n_ch3_soul_taken("第三章 · 吞下")
   n_ch4_open("第四章 · 白漫")
   n_ch4_scout("第四章 · 看清楚")
   n_ch4_imperial_line("第四章 · 链甲")
@@ -108,6 +111,7 @@ flowchart LR
   n_end_frozen(("结局 · 冷"))
   n_end_dragon(("结局 · 龙"))
   n_end_alone(("结局 · 一个人"))
+  n_end_dragon_slayer(("结局 · 屠龙者"))
   n_core_open --> n_core_voice
   n_core_open --> n_core_voice
   n_core_open --> n_core_voice
@@ -408,3 +412,16 @@ flowchart LR
   n_end_select --> n_end_whiterun
   n_end_select --> n_end_alone
   n_end_select --> n_end_refused
+  %% 0.3.0/0.3.1 补充：新增场景（ch2-thalmor / ch3-loop-gate / ch3-soul-taken）与第 9 结局（end-dragon-slayer）
+  n_ch2_faction_brief --> n_ch2_thalmor
+  n_ch2_thalmor --> n_ch2_city
+  n_ch2_thalmor --> n_ch2_city
+  n_ch3_hall --> n_ch3_soul_taken
+  n_ch3_dragon_win --> n_ch3_soul_taken
+  n_ch3_reunion --> n_ch3_soul_taken
+  n_ch3_soul_taken --> n_ch3_after_dragon
+  n_ch3_soul_taken --> n_ch3_after_dragon
+  n_ch3_after_dragon --> n_ch3_loop_gate
+  n_ch3_loop_gate --> n_core_open
+  n_ch3_loop_gate --> n_ch3_promise
+  n_end_select --> n_end_dragon_slayer

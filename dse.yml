@@ -23,7 +23,8 @@
 - id: state
   config:
     # @loop 时间循环的保留域：知识跨轮保留，消耗态每轮复原。
-    # 本作未使用 @loop（保留字段以备后续扩展「一夜循环」玩法）。
+    # 本作已在 ch3-loop-gate 使用 @loop:core-open 实现「时间轮回」；
+    # loopKeep 决定跨轮保留的知识（clues / flags），消耗态每轮复原。
     loopKeep:
       - clues
       - flags
@@ -115,7 +116,6 @@
         dragonLair: false     # 龙巢位置
         thuUm: false          # 龙吼知识
         nordCustom: false     # 诺德丧俗
-        imperialWarrant: false # 帝国通行证样式
         thalmorTrue: false    # 梭摩在禁塔洛斯之外另有图谋（第三势力线索）
         playerIdentity: false # 水晶那头的人究竟是谁（暗线）
 

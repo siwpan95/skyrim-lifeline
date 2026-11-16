@@ -142,7 +142,9 @@ scenes:
             trust: +3
         - id: thuUm
           name: 什么是龙吼？
-          if: 'clues.helgenTruth'
+          # 0.3.2：去掉 if: clues.helgenTruth —— 该变量会被 what 话题在对话内改写，
+          # 导致话题列表从 4→5 中途漂移（与 0.3.1 修复的 core-ask 同构）。
+          # 话题自进入起固定可见，靠 notes 预算保留取舍张力。
           reply: |
             「龙吼。」
 

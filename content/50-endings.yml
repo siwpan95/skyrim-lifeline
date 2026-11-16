@@ -25,7 +25,8 @@ pack:
   name: 霜语 · 结局集
   version: 0.1.0
   entry: end-select
-  description: 八个结局：真结局、死亡结局、隐藏结局、翻转结局
+  modes: [normal]
+  description: 九个结局：真结局、死亡结局、隐藏结局、翻转结局
   author: siwpan
   requires:
     plugins: [combat]
@@ -71,11 +72,11 @@ scenes:
       - text: 「……」
         if: 'trust >= 65'
         goto: end-whiterun
-      # ── 8. 独自走完 ────────────────────────────────────────
+      # ── 9. 独自走完 ────────────────────────────────────────
       - text: 「……」
         if: 'trust >= 40'
         goto: end-alone
-      # ── 9. 兜底 ────────────────────────────────────────────
+      # ── 10. 兜底 ───────────────────────────────────────────
       - text: 「……」
         goto: end-refused
 
