@@ -41,7 +41,7 @@
 |---|---|---|
 | `export-run` | **完整导出一次游戏流程**（真实引擎逐场景采集） | `.md` / `.json` / `.html` |
 | `export-outline` | 导出全部 109 个场景的**静态流程大纲** | `exports/outline.md` |
-| `cases` | 列出 8 个可用结局及通关脚本步数 | stdout / JSON |
+| `cases` | 列出 9 个可用结局及通关脚本步数 | stdout / JSON |
 | `play` | 转发到 `dse play`，参数原样透传 | 交互终端 |
 | `verify` | 转发到 `tools/verify.py`（四层门禁） | 门禁报告 |
 | `install-cli` | 生成 `.cmd` 垫片并装到 PATH 目录 | 4 份垫片 |
@@ -130,7 +130,7 @@ random.seed(seed)                          # combat 插件用全局 random.rando
 | | `export-outline` | `export-run` |
 |---|---|---|
 | 跑不跑引擎 | 不跑，读静态图 | 跑完整一局 |
-| 覆盖范围 | **全部 109 场景** + 全部出边（目标 / 类型 / 条件 / 选项文本 / 权重） | 某一局实际走过的 45–51 步 |
+| 覆盖范围 | **全部 113 场景** + 全部出边（目标 / 类型 / 条件 / 选项文本 / 权重） | 某一局实际走过的 45–51 步 |
 | 用途 | 审阅分支设计、查悬空与条件 | 复盘一局、存档记录、给玩家看实录 |
 
 `render_outline()` 用 `graph.edges_of()` 拿边，再用原始 `choices` 反查补齐
@@ -170,7 +170,7 @@ frostwords export-run --all-endings --format md,json,html
 
 ```bat
 frostwords export-outline --json
-:: {"ok": true, "file": "...\\exports\\outline.md", "bytes": 48916, "scenes": 109}
+:: {"ok": true, "file": "...\\exports\\outline.md", "bytes": 48916, "scenes": 113}
 ```
 
 `--` 之后的一切**原样透传**给被启动的程序，不被本工具解析：
@@ -259,9 +259,9 @@ ascii=True, bare_lf=0, lone_cr=0, quoted_call=True, marker=True
 |---|---|---|
 | 真结局采集 | `export_run.capture()` | `51 场景步 / 62 次输入 / 51 不同场景 → end-whiterun`；`normal 45 / dialogue 2 / battle 3 / trade 1` |
 | 三格式导出 | `frostwords export-run --ending end-thu-um --format all` | 3 文件全 OK，`51 场景步 → end-thu-um` |
-| 大纲 | `frostwords export-outline --json` | `{"ok":true,"bytes":48916,"scenes":109}` |
+| 大纲 | `frostwords export-outline --json` | `{"ok":true,"bytes":48916,"scenes":113}` |
 | 用例表 | `frostwords cases` | 8 个结局，52–62 步 |
-| 静态大纲 | `export-outline` | 109 场景标题 + 每条出边的条件 / 权重 |
+| 静态大纲 | `export-outline` | 113 场景标题 + 每条出边的条件 / 权重 |
 | 全结局批量导出 | `export-run --all-endings --format md,json,html` | 8/8 成功：`end-alone 49` / `end-dragon 52` / `end-frozen 48` / 其余 5 个各 `51` 场景步；24 个文件共 3.6 MB |
 | 最终验收 | `tools/verify.py` + `tests/cli_check.py` + 批量导出 三条并行 | `全部门禁通过（45.6s）`、`PASS 54 FAIL 0 SKIP 0`、`ALL_ENDINGS_EXIT=0` |
 | 仓库根垫片 | 从 cmd 执行 `frostwords.cmd export-run --ending end-frozen --format md --output <可写目录>\run.md` | `48 场景步 → end-frozen`，`72,299 B`，`rc=0` |
@@ -288,7 +288,7 @@ ascii=True, bare_lf=0, lone_cr=0, quoted_call=True, marker=True
 | ② | 退出码 `2`：未知命令、未知格式、未知结局、非法 seed、互斥参数、非法参数；拼写建议 |
 | ③ | `--json` 前置/后置一致性、可解析且 8 结局、`-q` 抑制、`--` 落在 argv 末尾、转发返回子进程码 7 |
 | ④ | 垫片字节契约：ASCII / CRLF / 无裸 LF / 无孤立 CR / 引号 / 标记；两类垫片**仅 root 行不同** |
-| ⑤ | 导出完整性：重算 JSON 步数与结局、每步都有 `state` 与 `changes`、输入次数 ≥ 步数、Markdown 终局表、HTML 折叠块、大纲 109 场景 |
+| ⑤ | 导出完整性：重算 JSON 步数与结局、每步都有 `state` 与 `changes`、输入次数 ≥ 步数、Markdown 终局表、HTML 折叠块、大纲 113 场景 |
 | ⑥ | 退出码 `1`（写失败）/ `6`（注入假 `dse_core` 模拟环境缺失）/ `130`（中断） |
 | ⑦ | 装 / 卸回归：`--dry-run` 不写文件、他人同名手工文件必须保留且被列出 |
 | ⑧ | 转发命令真跑 `verify --fast`，断言 `全部门禁通过` |

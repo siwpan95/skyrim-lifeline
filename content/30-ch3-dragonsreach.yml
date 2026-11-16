@@ -154,6 +154,10 @@ scenes:
         goto:
           - { to: ch3-root-cut, weight: 6 }
           - { to: ch3-dragon-arrives, weight: 4 }
+      # ── 0.3.0 屠龙者入口：从主干枢纽一跳进入，保持藤蔓收敛 ──
+      - text: 「别砍了。把那团火连同根一起吞下去——它本来就是你的。」
+        do: { soul: -1, trust: +1 }
+        goto: ch3-soul-taken
 
   ch3-bones-pile:
     title: 第三章 · 骨头堆
@@ -172,6 +176,12 @@ scenes:
 
       「这不对。这不应该发生。」
 
+    extraText:
+      # ── 0.3.0 阿尔卡伏笔之三：烧纸人与守墓人 ──
+      - text: |
+          （骨头堆边上有一小片没烧透的纸，和酒馆炉灰里那片一样。
+          有人在替这些骨头烧纸。烧了很多年。你突然想起渡口老头的闲话——
+          城里守墓的那位，整箱整箱地烧。）
     onEnter: { 'clues.helgenTruth': true, trust: +2 }
     choices:
       - text: 「你说得对。这不该发生。所以得有人把它弄对。」
@@ -348,6 +358,50 @@ scenes:
       - text: 「先检查你身上的火。还在吗。」
         do: { soul: -1, trust: +2 }
         goto: ch3-after-dragon
+      # ── 0.3.0 新支线：剖开龙尸、吞下它的魂（屠龙者结局入口）──
+      # 短藤蔓：新场景只改变过程状态，1 跳后汇回 ch3-after-dragon。
+      - text: 「它死了。可你身上的火没停——去把那颗东西取出来。」
+        do: { soul: -1, trust: +1 }
+        goto: ch3-soul-taken
+
+  ch3-soul-taken:
+    title: 第三章 · 吞下
+    text: |
+      「我割开它的脖子。」
+
+      「里面有一颗珠子。不是石头——是暖的，
+      像刚从火里拿出来。」
+
+      「我看着它。它也在看我。」
+
+      「我想起法师说的：'你吞了它。'」
+
+      「那天晚上我以为他在说胡话。」
+
+      「……我把它拿起来了。」
+
+      很长的沉默。
+
+      「它进来了。」
+
+      「你能听见吗。我这边——多了点什么。」
+
+      「不是两个声音。是一个。但是更大了。」
+
+      「我好像……明白那团火为什么要跟着我了。」
+
+    onEnter: { 'flags.absorbedSoul': true, 'flags.sawDragon': true, 'clues.thuUm': true, hp: -2, warmth: -4 }
+    extraText:
+      - if: 'trust >= 60'
+        text: |
+          （你没有阻止她。她知道——这一次你默许了。）
+    choices:
+      - text: 「我在听。你还是你。」
+        do: { trust: +3 }
+        goto: ch3-after-dragon
+      - text: 「你说得对。那本来就是你的。」
+        do: { trust: +2 }
+        goto: ch3-after-dragon
 
   ch3-dragon-lose:
     title: 第三章 · 倒下的地方
@@ -440,6 +494,11 @@ scenes:
       - text: 「所以海尔根那天晚上，是你去追的龙。」
         do: { soul: -1, 'clues.dragonLair': true }
         goto: ch3-after-dragon
+      # ── 0.3.0：吞下龙魂、选择成为屠龙者（可靠可达的入口）──
+      # 重逢分支里她已经承认吞了蛋。这里让她主动认下这份力量。
+      - text: 「那你打算拿它怎么办？那不是病。那是力量。」
+        do: { trust: +2, soul: -1 }
+        goto: ch3-soul-taken
 
   # ══════════════════════════════════════════════════════════════
   # 战后：承诺（once，一次性）
@@ -481,6 +540,49 @@ scenes:
         goto: ch3-promise
       - text: 「你更想知道的是：这条命会不会还给你，对不对。」
         do: { trust: +3, soul: -1 }
+        goto: ch3-promise
+      # ── 0.3.0 时间轮回入口（引擎原生 @loop，知识跨轮保留）──
+      # 只在玩家问过「那边一直是你吗」之后出现；flags.looped 随 loopKeep
+      # 跨轮保留，故一轮后此选项永久消失，不会在 fuzz 中死循环。
+      - text: 「（你想起来她问过的那个问题。也许可以重来一次——这次你记得，她不记得。）」
+        if: 'clues.playerIdentity and not flags.looped'
+        do: { soul: -1 }
+        goto: ch3-loop-gate
+
+  ch3-loop-gate:
+    title: 第三章 · 再来一次
+    text: |
+      水晶烫了一下。
+
+      「你刚才那句话——我好像在什么时候听过。」
+
+      她皱起眉，像是在想一件刚刚发生过、却怎么也记不起来的事。
+
+      「算了。大概是我累了。」
+
+      你握着水晶。你忽然意识到一件事：
+      她不记得的东西，你记得。
+
+      「那天在雪地里，你问我'有人吗'。」
+
+      她的表情变了。
+
+      「……我确实问过这句。」
+
+      「可我没跟你说过我后来问的那个问题。」
+
+      「除非——」
+
+      她停住了。
+
+      水晶开始发热。和序章那一夜一样的热。
+
+    choices:
+      - text: 「（让这一夜从头再来。我记得，她不记得。）」
+        do: { 'flags.looped': true }
+        goto: '@loop:core-open'
+      - text: 「不。别再来一次了。往前走。」
+        do: { trust: +2 }
         goto: ch3-promise
 
   ch3-promise:

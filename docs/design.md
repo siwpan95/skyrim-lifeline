@@ -220,6 +220,7 @@ dse coverage --e2e end-secret   # 声明某个结局已由 e2e 用例覆盖
 | `end-refused` | `trust < 20` | 断线（最低优先级兜底） |
 | `end-mercy` | `trust >= 55 and hp <= 4` | 翻转：她死了，但事办成了 |
 | `end-thu-um` | `trust >= 75 and clues.thuUm and flags.knewTruth` | **隐藏真结局**（龙吼） |
+| `end-dragon-slayer` | `flags.absorbedSoul and trust >= 60` | 屠龙者（0.3.0 新增） |
 | `end-soldiers` | `flags.bribedGuard and not flags.keptSecret` | 被举报告发 |
 | `end-frozen` | `warmth <= 12` | 冻死 |
 | `end-dragon` | `flags.sawDragon and flags.refusedAdvice` | 被龙吞 |
@@ -269,9 +270,27 @@ def is_ending(scene) -> bool:
 - [x] **数值平衡（0.7.0 反哺已完成，见 §3.1）**：`state.bounds` 钳制七个
       数值字段、`state.fatal` 早期体温失败分支，终局数值落在合法区间；
       8 结局可达性经全量门禁复验不变。
-- [ ] `end-dragon-slayer` 结局补齐（战斗胜利后的独立分支）
+- [x] `end-dragon-slayer` 结局补齐（0.3.0，见下 §八）
 - [ ] 更多 `variants` 变体文本（提升重玩观感）
 - [ ] `i18n` 插件接入（英译）
 - [ ] HTML 单文件导出（`dse export-html` 仅支持 normal 模式，需拆分战斗/对话场景）
-- [ ] 成就系统补全（当前 6 条）
+- [x] 成就系统补全（0.3.0：6 → 16 条）
 - [ ] 美术：终端 ASCII 头像 / 地图
+
+---
+
+## 八、0.3.0 内容扩充（已实施）
+
+提案与联网调研见 `docs/内容扩充探讨.md`。已落地的内容改动：
+
+| 扩充 | 机制实现 | 兼容性处理 |
+|---|---|---|
+| 第九结局 `end-dragon-slayer` | `ch3-soul-taken` 短藤蔓 + `end-select` 新分流 | 从主干枢纽一跳进入；solve_e2e 补 trust 连续项求解 |
+| 信任驱动服从 | `core-advice-1` 六选项，`if: trust >= 45` 互斥门控两套权重 | 引擎 weight 只收字面量 → 用 if 门控模拟动态权重 |
+| soul 软后果 | `soul >= 2` 门控深度咨询话题 + `soul <= 0` 信号衰减 extraText | 不设 fatal，避免误杀 `soul=0` 的惨胜真结局 |
+| 时间轮回 | `ch3-loop-gate` → `@loop:core-open` | `loopKeep:[clues,flags]` 保留知识；`flags.looped` 防死循环 |
+| 不可靠叙述 | `core-corridor` 锚点分歧 + 酒馆 `witness` 矛盾证词 | 纯 extraText / dialogue effect，不改引擎 |
+| 第三势力梭摩 | `ch2-thalmor` 短藤蔓 + `ch4-scout` 提示 | 新旗标在 `state.initial` 预声明 |
+| 阿尔卡伏笔 / 玩家身份暗线 | 三处 extraText + `clues.playerIdentity` 回调 | 不影响选项编号与 e2e 路径 |
+
+静态校验：`113 场景 / 9 结局（可达 9）`。四层门禁与 9 条 e2e 全过（见 CHANGELOG）。

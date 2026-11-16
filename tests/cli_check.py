@@ -104,10 +104,10 @@ def test_global_flags() -> None:
     check("--json 两种位置结果一致", a.strip() == b.strip(), "输出不同")
     try:
         data = json.loads(a)
-        check("--json 是可解析 JSON 且 8 结局",
-              data.get("ok") and data.get("count") == 8, str(data)[:120])
+        check("--json 是可解析 JSON 且 9 结局",
+              data.get("ok") and data.get("count") == 9, str(data)[:120])
     except Exception as exc:
-        check("--json 是可解析 JSON 且 8 结局", False, str(exc))
+        check("--json 是可解析 JSON 且 9 结局", False, str(exc))
     rc, so, _ = run(["-q", "cases"])
     check("-q 抑制 [OK]/[INFO]", rc == 0 and "[OK]" not in so and "[INFO]" not in so,
           so[:120])
@@ -201,7 +201,7 @@ def test_export() -> None:
         check("export-outline rc=0", rc == 0, f"rc={rc} {se[:120]}")
         if (d / "outline.md").exists():
             ol = (d / "outline.md").read_text(encoding="utf-8")
-            check("大纲含全部场景标题", ol.count("\n## `") == 109,
+            check("大纲含全部场景标题", ol.count("\n## `") == 113,
                   str(ol.count("\n## `")))
             check("大纲出边表带条件列", "| 条件 |" in ol)
 

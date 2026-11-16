@@ -216,6 +216,46 @@ scenes:
       - text: 「他们为什么要找龙？」
         do: { soul: -1 }
         goto: ch2-city
+      # ── 0.3.0 第三势力：梭摩的影子 ──
+      - text: 「你刚才说'别让那帮人看见'——到底是哪帮人？」
+        do: { soul: -1, trust: +1 }
+        goto: ch2-thalmor
+
+  # ── 第三面旗：梭摩裁判官（0.3.0 新增，短藤蔓汇回 ch2-city）──
+  ch2-thalmor:
+    title: 第二章 · 白袍
+    text: |
+      「她压低了声音，像是怕墙听见。」
+
+      「'不是帝国，也不是风暴斗篷。'」
+
+      「'是白袍。从南边来的。他们不问龙——他们问名字，
+      问你拜哪个神，问你家里供不供塔洛斯。'」
+
+      「'他们管这叫'清查'。被记上名字的人，过几天就不见了。'」
+
+      「'我见过一个。他什么也没做错，就是在一间屋子里
+      多待了一会儿。第三天那间屋子空了。'」
+
+      「她说完就不说了。她盯着炉子。」
+
+      「'你身上那团火，要是让他们看见——'」
+
+      「她没把话说完。」
+
+    onEnter: { 'flags.thalmorNotice': true, 'clues.thalmorTrue': true, trust: +1 }
+    extraText:
+      - if: 'flags.witnessConflict'
+        text: |
+          （你想起酒馆那个诺德人：海尔根那晚，有人「一间一间屋地搜」。
+          他没说搜的是谁。现在你知道了。）
+    choices:
+      - text: 「那我们更得小心。别再提那个名字。」
+        do: { trust: +2, 'flags.keptSecret': true }
+        goto: ch2-city
+      - text: 「他们到底想干什么？禁一个神还不够？」
+        do: { soul: -1 }
+        goto: ch2-city
 
   # ── 帝国分支：铜牌路线 ───────────────────────────────────────
   ch2-guard-imperial:
@@ -340,6 +380,12 @@ scenes:
 
       「'那天晚上，你杀了一条龙。'」
 
+    extraText:
+      - if: 'flags.witnessConflict'
+        text: |
+          （酒馆那个诺德人说：那晚天上什么都没有，火是从地里烧起来的。
+          法师却说是一条龙从天而降。两个人都发誓自己看见的是真的。
+          你把这两句话都记在水晶里。你没告诉她其中任何一句。）
     onEnter: { 'clues.helgenTruth': true, 'flags.knewTruth': true, trust: +3 }
     choices:
       - text: 「……她没有说话。你替她说话：让她一个人待会儿。」
@@ -481,6 +527,29 @@ scenes:
           effect:
             trust: +2
             'clues.dragonLair': true
+        # ── 0.3.0 矛盾见证：让证词与法师的说法正面冲突 ──
+        - id: witness
+          name: 海尔根那晚，天上是一条龙，还是别的什么？
+          reply: |
+            他愣了一下，然后笑了。
+
+            「一条？你说'一条'？」
+
+            「那天晚上天上什么都没有。我在这儿蹲着收网，
+            抬头看见的是火——从地里烧起来的火。」
+
+            「没有翅膀。没有吼声。就是火，从海尔根底下烧上来。」
+
+            「后来城塌了，才知道是龙。可那晚我什么也没看见。」
+
+            他喝了一口。
+
+            「你要是听谁说'一条龙从天上下来'——
+            那是后来编的。人总得给火找个样子。」
+
+          effect:
+            trust: +1
+            'flags.witnessConflict': true
 
   ch2-tavern-after:
     title: 第二章 · 炉火边
@@ -499,6 +568,11 @@ scenes:
       「然后她就走了。没留名字。」
 
     onEnter: { warmth: +10, stamina: +8, clock: +1, rations: -1 }
+    extraText:
+      # ── 0.3.0 阿尔卡伏笔之二：灰斗篷与烧纸 ──
+      - text: |
+          （她走后，你在炉灰里看见一小片没烧尽的纸。
+          上面是个名字的开头，看不全。像是有人特意烧到这里才停手。）
     choices:
       - text: 「追出去问问她是谁。」
         do: { soul: -1, trust: +2 }

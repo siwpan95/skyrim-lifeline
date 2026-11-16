@@ -2,6 +2,46 @@
 
 本文件遵循 Keep a Changelog 结构，版本号遵循 SemVer。
 
+## [0.3.0] - 2026-11-16
+
+### Added
+
+- **第九个结局 `end-dragon-slayer`（屠龙者）**：第三章新增 `ch3-soul-taken`
+  短藤蔓，她剖开幼龙、吞下龙魂，选择对抗；从 `ch3-hall` 主干枢纽与
+  `ch3-reunion` 两处进入，1 跳汇回 `ch3-after-dragon`。`end-select` 新增
+  `flags.absorbedSoul and trust >= 60` 分流。`solve_e2e.py` 的 GOALS /
+  ENDINGS / EXPECT 同步登记，并在 score 里补 trust 连续项打破双目标平局。
+- **第三势力梭摩**：`ch2-thalmor`（白袍 / 塔洛斯清查）短藤蔓 +
+  `ch4-scout` 的「第三拨人」extraText；新增 `flags.thalmorNotice` /
+  `clues.thalmorTrue`。
+- **不可靠叙述（海尔根真相）**：`core-corridor` 锚点场景按
+  `clues.helgenTruth` / `flags.knewTruth` 显示互相矛盾的细节；酒馆
+  `witness` 话题（法典「那晚天上什么都没有，火从地里烧起来」）设置
+  `flags.witnessConflict`，与法师「一条龙从天而降」正面冲突，并在
+  `ch2-mage-truth` 留下比对提示。
+- **时间轮回入口**：`ch3-loop-gate` 用引擎原生 `@loop:core-open`，状态重置
+  但 `loopKeep: [clues, flags]` 让知识跨轮保留；由 `clues.playerIdentity`
+  门控、`flags.looped` 随轮次保留以防死循环。`core-corridor` 显示轮回记忆。
+- **灵魂水晶软后果**：`core-ask` 的 `listener` 话题需 `soul >= 2`，问「那边
+  一直是你吗」获 `clues.playerIdentity`；`ch4-end-select` 在 `soul <= 0`
+  时显示信号衰减文本（不做 fatal，避免误杀 `soul=0` 的惨胜真结局）。
+- **信任驱动的服从权重**：`core-advice-1` 三条建议各按 `trust >= 45` /
+  `< 45` 门控两套互斥选项，高信任 obey 权重显著更高（9:1 / 8:2 / 6:4），
+  低信任违抗概率上升；`trust` 首次成为过程机制而非仅结局门槛。
+- **显性压力提示**：`ch1-open` 按 `warmth` / `clock` 阈值显示体温与夜深提示。
+- **阿尔卡伏笔线**：渡口闲话、酒馆炉灰残纸、第三章骨堆残纸三处 extraText，
+  玩家拼合后才恍然「烧纸的守墓人」就是她要找的阿尔卡。
+- **玩家身份暗线**：`clues.playerIdentity` + 真结局收尾回调。
+- **成就 6 → 16 条**：新增屠龙者、她没听、对不上的证词、第三面旗、时间轮回
+  及各死亡结局成就。
+
+### Changed
+
+- `dse check`：`109 场景 / 8 结局` → `113 场景 / 9 结局`（可达 9），无悬空 / 不可达。
+- `tests/cli_check.py`：`cases` 断言 8 → 9，`export-outline` 标题数 109 → 113。
+- `tools/solve_e2e.py` / `tests/e2e_cases.json`：9 条 e2e 全部用真实引擎重建。
+- `README.md` / `docs/CLI.md` / `frostwords_cli.py`：结构性数字同步更新。
+
 ## [Unreleased]
 
 ### Docs

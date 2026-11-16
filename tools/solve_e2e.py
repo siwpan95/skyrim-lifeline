@@ -72,6 +72,10 @@ GOALS: dict[str, list[tuple[str, object]]] = {
         ("trust >= 55", lambda s: (s.get("trust") or 0) >= 55),
         ("hp <= 4", lambda s: (s.get("hp") or 999) <= 4),
     ],
+    "end-dragon-slayer": [
+        ("flags.absorbedSoul", lambda s: bool((s.get("flags") or {}).get("absorbedSoul"))),
+        ("trust >= 60", lambda s: (s.get("trust") or 0) >= 60),
+    ],
 }
 
 
@@ -137,6 +141,12 @@ def score(snapshot: dict, goals, target: str | None = None) -> float:
         w = snapshot.get("warmth")
         if isinstance(w, (int, float)):
             base += max(0.0, 100 - w) / 1000.0
+    if target == "end-dragon-slayer":
+        # 双目标（absorbedSoul + trust>=60）在平局时缺少朝 trust 的梯度，
+        # 补一个 0~0.06 的连续项打破平局，量级远小于「到达目标」的 1000 分。
+        t = snapshot.get("trust")
+        if isinstance(t, (int, float)):
+            base += min(t, 60) / 1000.0
     return base
 
 
@@ -192,6 +202,7 @@ ENDINGS: dict[str, str] = {
     "end-frozen": "结局 · 冻死在雪里",
     "end-dragon": "结局 · 被龙吞",
     "end-alone": "结局 · 她独自走完",
+    "end-dragon-slayer": "结局 · 屠龙者",
 }
 
 # 与 content/50-endings.yml 的 end-select 条件一致；到达该结局即意味着
@@ -201,6 +212,7 @@ EXPECT: dict[str, list[str]] = {
     "end-frozen": ["warmth <= 12"],
     "end-thu-um": ["clues.thuUm"],
     "end-mercy": ["hp <= 4"],
+    "end-dragon-slayer": ["flags.absorbedSoul"],
 }
 
 

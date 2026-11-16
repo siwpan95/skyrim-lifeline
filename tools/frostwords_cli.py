@@ -51,8 +51,8 @@ frostwords - 霜语 · Frostwords 命令行工具
 
 命令:
   export-run       完整导出一次游戏流程（真实引擎逐场景采集）
-  export-outline   导出全部 109 个场景的静态流程大纲
-  cases            列出 8 个可用结局及其通关脚本
+  export-outline   导出全部场景的静态流程大纲（当前 113 个）
+  cases            列出可用结局及其通关脚本（当前 9 个）
   play             转发到 dse play（参数原样透传）
   verify           转发到 tools/verify.py（四层门禁）
   install-cli      生成 .cmd 垫片并安装到 PATH 目录

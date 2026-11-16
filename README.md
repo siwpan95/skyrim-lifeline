@@ -34,7 +34,7 @@ dse check                      # 静态校验（Schema / 悬空跳转）
 dse scenes                     # 列出全部场景
 dse graph --format mermaid     # 导出场景图
 
-frostwords cases               # 列出 8 个可用结局
+frostwords cases               # 列出 9 个可用结局
 frostwords export-run          # 完整导出一次游戏流程（真结局）
 frostwords install-cli         # 装好上面这个命令（Windows）
 ```
@@ -132,9 +132,14 @@ dse export-html -o frostwords.html --title "霜语 · Frostwords"
 
 ### 多结局
 
-八个结局，包括真结局、隐藏结局（龙吼）、翻转结局（她死了，但事办成了），
-以及好几个你压根救不了她的死法。满足条件的结局会在 `end-select`
-并列出现 —— 最后一按由你负责。
+九个结局，包括真结局、隐藏结局（龙吼）、翻转结局（她死了，但事办成了）、
+屠龙者结局（她吞下龙魂、选择对抗），以及好几个你压根救不了她的死法。
+满足条件的结局会在 `end-select` 并列出现 —— 最后一按由你负责。
+
+> **0.3.0 内容扩充**：在四层门禁与全结局 e2e 回放的保护下新增了一条屠龙者结局、
+> 第三势力梭摩线、海尔根真相的不可靠叙述、灵魂水晶余量的软后果、信任驱动的
+> 服从权重、时间轮回入口（引擎原生 `@loop`，知识跨轮保留），以及阿尔卡伏笔与
+> 玩家身份暗线。详见 `docs/内容扩充探讨.md`（提案）与 `CHANGELOG.md`。
 
 ---
 
@@ -149,10 +154,10 @@ dse export-html -o frostwords.html --title "霜语 · Frostwords"
 ```bat
 <PYTHON> tools\frostwords_cli.py install-cli
 
-frostwords cases                                          :: 8 个可用结局
+frostwords cases                                          :: 9 个可用结局
 frostwords export-run --ending end-whiterun --format md,json,html
-frostwords export-run --all-endings                        :: 8 个结局各导一份
-frostwords export-outline --json                          :: 109 场景静态大纲
+frostwords export-run --all-endings                        :: 9 个结局各导一份
+frostwords export-outline --json                          :: 113 场景静态大纲
 frostwords verify --fast                                  :: 转发四层门禁
 frostwords play -- --entry core-open                      :: 转发 dse play
 ```
@@ -187,7 +192,7 @@ frostwords play -- --entry core-open                      :: 转发 dse play
 模式分布 `normal 45 / dialogue 3 / battle 3 / trade 1`。
 输入次数大于场景步数，正是一个场景里连问多题、打多回合、走多天所致。
 
-> `export-outline` 是另一层「完整」：**全部 109 个场景**和每条出边的
+> `export-outline` 是另一层「完整」：**全部 113 个场景**和每条出边的
 > 目标 / 类型 / 条件 / 选项文本 / 权重，静态大纲，不跑引擎。
 > `export-run` 是某一局的实际走法，两者互补。
 
@@ -210,7 +215,7 @@ skyrim-lifeline/
 │   ├── 20-ch2-ashford.yml     第二章 · 白漫之下
 │   ├── 30-ch3-dragonsreach.yml 第三章 · 根
 │   ├── 40-ch4-whiterun.yml    第四章 · 白漫
-│   └── 50-endings.yml         结局集（分流闸门 + 八个结局）
+│   └── 50-endings.yml         结局集（分流闸门 + 九个结局）
 ├── tools/
 │   ├── frostwords_cli.py   CLI 编排层（参数 / 转发 / 退出码）
 │   ├── export_run.py       完整流程采集与 md/json/html 渲染核心
@@ -222,7 +227,7 @@ skyrim-lifeline/
 │   ├── allin-repocheck-validation.md  以本仓为样本对 `allin` 体检器的实战校验报告（历史快照）
 │   ├── allin-fix-verification.md  P0→P3 整改最终验证报告（三态 / 远端证据 / 未修项）
 │   ├── design.md           设计文档：机制映射表 + 路径爆炸分析 + 结构约束
-│   ├── graph.mmd           场景图（109 场景，Mermaid）
+│   ├── graph.mmd           场景图（113 场景，Mermaid）
 │   └── sample_transcript.txt  序章试玩实录（`dse play --input` 真实输出）
 ├── tests/
 │   ├── e2e_cases.json      e2e 用例数据（由求解器生成，verify.py 消费）
@@ -310,11 +315,11 @@ python tools/solve_e2e.py --all --write-cases      # 全量求解并回写 tests
 
 | 检查 | 命令 | 结果 |
 |---|---|---|
-| 静态图 | `dse check` | `109 场景 / 8 结局（可达 8）`，无悬空、无不可达 |
+| 静态图 | `dse check` | `113 场景 / 9 结局（可达 9）`，无悬空、无不可达 |
 | 引擎自检 | `dse doctor` | 健康 |
-| 全量门禁 | `python tools/verify.py` | `200 条随机路径`、`覆盖 89/109 场景 (82%)`、8 条 e2e 全过、8 个结局均 `SE`、`✓ 全部门禁通过` |
+| 全量门禁 | `python tools/verify.py` | `200 条随机路径`、`覆盖 91/113 场景 (81%)`、9 条 e2e 全过、9 个结局均 `SE`、`✓ 全部门禁通过` |
 | CLI 回归 | `python tests/cli_check.py` | `PASS 54  FAIL 0  SKIP 0` |
-| 全结局批量导出 | `frostwords export-run --all-endings --format md,json,html` | 8/8 结局成功，`48–52 场景步`，25 个文件共 `3,621,848 B` |
+| 全结局批量导出 | `frostwords export-run --all-endings --format md,json,html` | 9/9 结局成功，`48–53 场景步`，27 个文件共约 `4.2 MB` |
 | 跨目录调用 | 在 `C:\Windows` 下执行 PATH 垫片 `fwcli export-run` | `49 场景步 → end-alone`，`rc=0` |
 | 垫片字节 | `cli_shim.inspect_shim()` | `ascii=True, bare_lf=0, lone_cr=0, quoted_call=True, marker=True` |
 | 跨仓实战校验（校验时点） | `<ALLIN_ROOT>` 的 `tools/repocheck` 扫 `<REPOS_ROOT>` | 〔本机〕暴露发现层假阴性 `139 只认出 138`、库级 `score 6.0 / 0.442 / error 4` |

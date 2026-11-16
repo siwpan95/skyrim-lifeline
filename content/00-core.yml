@@ -147,22 +147,58 @@ scenes:
 
       「你说往东——东边是什么？」
 
+    extraText:
+      - if: 'trust >= 45'
+        text: |
+          （她还在听。你感觉得出来——这几句她会认真想。）
+      - if: 'trust < 45'
+        text: |
+          （水晶那头有点距离感。她没完全信你——话得说得准。）
+
+    # ★ 0.3.0：信任真正驱动「她听不听」。引擎的 weight 只接受数字字面量
+    #   （engine._pick_weighted 不解析表达式），所以用「if 门控的重复选项组」
+    #   模拟动态权重：同一句话两套写法、条件互斥、玩家只看得到其中一套。
+    #   高信任时她九成照做；低信任时违抗概率显著上升。两条支路仍汇入 core-ask。
     choices:
+      # ── 建议一：缓坡 / 火（最具体的建议）──
       - text: 「东边是缓坡，有猎人小屋，有火。」
+        if: 'trust >= 45'
         do: { soul: -1, trust: +2 }
         goto:
-          - { to: core-east-obey, weight: 7 }
-          - { to: core-east-defy, weight: 3 }
+          - { to: core-east-obey, weight: 9 }
+          - { to: core-east-defy, weight: 1 }
+      - text: 「东边是缓坡，有猎人小屋，有火。」
+        if: 'trust < 45'
+        do: { soul: -1, trust: +2 }
+        goto:
+          - { to: core-east-obey, weight: 5 }
+          - { to: core-east-defy, weight: 5 }
+      # ── 建议二：先有路 ──
       - text: 「东边有路。先有路，再想别的。」
+        if: 'trust >= 45'
         do: { soul: -1, trust: +1 }
+        goto:
+          - { to: core-east-obey, weight: 8 }
+          - { to: core-east-defy, weight: 2 }
+      - text: 「东边有路。先有路，再想别的。」
+        if: 'trust < 45'
+        do: { soul: -1, trust: +1 }
+        goto:
+          - { to: core-east-obey, weight: 4 }
+          - { to: core-east-defy, weight: 6 }
+      # ── 建议三：先治伤（她最可能拒绝的一条）──
+      - text: 「别管东边了。你手上还有伤吗？」
+        if: 'trust >= 45'
+        do: { soul: -1 }
         goto:
           - { to: core-east-obey, weight: 6 }
           - { to: core-east-defy, weight: 4 }
       - text: 「别管东边了。你手上还有伤吗？」
+        if: 'trust < 45'
         do: { soul: -1 }
         goto:
-          - { to: core-east-obey, weight: 4 }
-          - { to: core-east-defy, weight: 6 }
+          - { to: core-east-obey, weight: 3 }
+          - { to: core-east-defy, weight: 7 }
 
   core-east-obey:
     title: 序章 · 她照做了
@@ -289,6 +325,36 @@ scenes:
           effect:
             trust: +4
             'flags.knewTruth': true
+        # ── 0.3.0：灵魂水晶余量门控的深度咨询 ──
+        # 每问一次都在花水晶；水晶见底就问不出这个「多余的问题」。
+        # 这是 soul 的软后果：不是硬死亡，而是「说不下去了」——
+        # 省着用能多知道一件事，花光了就只剩信号里的杂音。
+        - id: listener
+          name: （多花一点水晶）那边……一直是你吗？
+          if: 'soul >= 2'
+          reply: |
+            她沉默的时间比平时长。
+
+            「你问这个做什么。」
+
+            「……我不知道。就是有时候觉得，
+            你那边太安静了。安静得不像有人。」
+
+            「我说话的时候，你从来不喘气。不咳嗽。不碰东西。」
+
+            「有一次我停了很久，想听听你那边有没有什么声音。」
+
+            「什么都没有。」
+
+            「你到底是在听，还是——」
+
+            她没说完。
+
+            「算了。你听得见就行。」
+          effect:
+            soul: -2
+            trust: +2
+            'clues.playerIdentity': true
 
   # ══════════════════════════════════════════════════════════════
   # 教学：记忆回廊（diary 模式 = 重读已读过的消息）
@@ -317,6 +383,18 @@ scenes:
     title: 记忆回廊
     text: |
       石头里存着你们说过的所有话。翻一翻，也许能想起什么。
+    # ★ 0.3.0 不可靠叙述：同一段记忆，细节随「她是否已经说出真相」而变。
+    #   玩家跨周目比对才会发现——她讲的版本一直在微调。
+    extraText:
+      - if: 'clues.helgenTruth and flags.knewTruth'
+        text: |
+          （你翻到海尔根那一夜。她说那条龙是「从北边来的」。
+          可你记得法师说过，它刚被放逐——是从天上掉下来的。
+          两种说法都像真的。你不确定哪一句是她想让你记住的。）
+      - if: 'flags.looped'
+        text: |
+          （有一段记忆是重复的。你明明是第一次翻它，却认得那句话的结尾。
+          石头记得的不只是话——还有你「上一次」读过它。）
     mode: diary
     diary:
       onExit: core-depart

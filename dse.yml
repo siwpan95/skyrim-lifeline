@@ -102,6 +102,11 @@
         tookAmulet: false     # 取走护王之链
         choseMercy: false     # 选择放她走
         refusedAdvice: false  # 她拒绝过你的建议
+        # ── 0.3.0 内容扩充：剧情纵深 ──
+        absorbedSoul: false   # 她吸收了幼龙的魂（屠龙者结局门槛）
+        witnessConflict: false # 酒馆证词与法师叙述对不上（不可靠叙述）
+        thalmorNotice: false  # 梭摩裁判官已经记下她的名字
+        looped: false         # 时间轮回已经发生过一次（知识跨轮保留）
 
       # ── 线索库：知识即选项 ──
       clues:
@@ -111,6 +116,8 @@
         thuUm: false          # 龙吼知识
         nordCustom: false     # 诺德丧俗
         imperialWarrant: false # 帝国通行证样式
+        thalmorTrue: false    # 梭摩在禁塔洛斯之外另有图谋（第三势力线索）
+        playerIdentity: false # 水晶那头的人究竟是谁（暗线）
 
 - id: io
 
@@ -215,6 +222,47 @@
         name: 龙语者
         desc: 她喊出了那个字，而你还在线上
         when: 'scene == "end-thu-um"'
+      # ── 0.3.0 扩充：结局 / 关键节点成就 ──
+      - id: refused-advice
+        name: 她没听
+        desc: 她第一次拒绝了你的建议
+        when: 'flags.refusedAdvice'
+      - id: dragon-slayer
+        name: 屠龙者
+        desc: 她的刀剖开了幼龙，吞下了它的魂
+        when: 'flags.absorbedSoul'
+      - id: witness-conflict
+        name: 对不上的证词
+        desc: 你发现酒馆与法师说的不是同一件事
+        when: 'flags.witnessConflict'
+      - id: thalmor-notice
+        name: 第三面旗
+        desc: 梭摩裁判官记住了她的名字
+        when: 'flags.thalmorNotice'
+      - id: walked-alone
+        name: 一个人
+        desc: 她没有再说话，独自走完
+        when: 'scene == "end-alone"'
+      - id: cold-end
+        name: 冷
+        desc: 她冻死在雪里
+        when: 'scene == "end-frozen"'
+      - id: dragon-food
+        name: 龙的食物
+        desc: 她被龙吞下
+        when: 'scene == "end-dragon"'
+      - id: cut-off
+        name: 断线
+        desc: 她切断了灵魂链接
+        when: 'scene == "end-refused"'
+      - id: reported
+        name: 报告
+        desc: 她被举报告发
+        when: 'scene == "end-soldiers"'
+      - id: time-loop
+        name: 再过一次
+        desc: 时间轮回了一轮，而你记得上一轮
+        when: 'flags.looped'
 
 - id: save
   config:

@@ -40,6 +40,16 @@ scenes:
 
       「你那边有声音吗？我这边只有风。」
 
+    extraText:
+      - if: 'warmth >= 60'
+        text: |
+          （水晶里那点光还稳。她还有时间。）
+      - if: 'warmth < 35 and warmth > 12'
+        text: |
+          （光的边缘在发抖。你数得出来她还能走几段路——不多。）
+      - if: 'clock >= 5'
+        text: |
+          （夜深了。身后那东西一直在飞，从没停过。）
     onEnter: { warmth: -6, clock: +1 }
     choices:
       - text: 「有。我一直听着。慢慢走，别摔。」

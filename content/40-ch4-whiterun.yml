@@ -82,6 +82,12 @@ scenes:
 
       「两边都不管我。可两边都会看我。」
 
+    extraText:
+      - if: 'flags.thalmorNotice'
+        text: |
+          （还有第三拨人。你没看见他们，但他们在这座城里——
+          白袍，问名字，问神。她讲过的那间空屋子，你一直记着。
+          两拨旗子之下，还有一双不举旗的眼睛。）
     onEnter: { 'clues.helgenTruth': true }
     choices:
       - text: 「走帝国那边。他们在抓人，说明还没放弃查龙。」
@@ -585,6 +591,14 @@ scenes:
       （她在等。等一个数字，或者等一个方向。）
 
     onEnter: { clock: +1 }
+    extraText:
+      - if: 'soul <= 0'
+        text: |
+          （水晶里已经没有回声了。你说的话像是落进一口空井——
+          她还在听，但那头再没有什么能把你送回去。你只能一直说下去。）
+      - if: 'clues.playerIdentity'
+        text: |
+          （她问过你那边是谁。你没答。现在这句话就卡在水晶最深处。）
     choices:
       - text: 「三天。够你走到有人的地方。」
         do: { soul: -1, trust: +1 }
