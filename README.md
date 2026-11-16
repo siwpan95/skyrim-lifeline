@@ -171,6 +171,8 @@ frostwords play -- --entry core-open                      :: 转发 dse play
 | 环节 | 做法 |
 |---|---|
 | 场景正文与选项 | 订阅 `scene/enter`（在 `onEnter` 结算之后、渲染之前发出），按 `engine.render` 同口径重算 `if` / `once` 可见选项 |
+| 对话可见话题 | 直接调引擎 `DialogueService.visible()` —— 它按 `if` 过滤（**不看 `once`**）并对可见列表重编号，正是玩家看到的编号。导出器**不重算**这套过滤，话题编号与引擎同源 |
+| 每轮编号基准 | 提问的 effect 可能跨过某个话题的 `if` 门槛使列表重排，所以每问一题都存一份可见列表快照，能看出「第 2 问时的话题编号已经变了」 |
 | 玩家输入 | hook `io.ask` —— 引擎与五种 mode 插件的输入都经这一通道，battle 多回合、dialogue 连问、trade 逐日都记下 |
 | 数值轨迹 | 相邻场景状态快照做 diff，摊平为点路径，丢掉 `visits` / `onceSeen` 噪音 |
 
@@ -179,13 +181,18 @@ frostwords play -- --entry core-open                      :: 转发 dse play
 `DSE_ENTRY`，且 combat 随机源已改为 `engine.rng`；为兼容 0.6.x，导出器仍
 显式清 `DSE_ENTRY` 并同时固定 `engine.rng` 与全局种子。
 
+> ⚠️ `ask N` 的编号是**当轮可见列表**的编号，不是内容包里 `topics` 的原始序号。
+> 门控话题（`if` 条件）会挤掉前面的项，编号随之重排 —— 0.3.1 修的正是
+> 这个漂移（`core-ask` 的 `why` 曾因 `trust` 中途跨过门槛而换位）。
+> 导出产物里的「编号基准」表就是按当轮真实编号记的。
+
 ### 产出
 
 | 格式 | 内容 | 典型体积 |
 |---|---|---|
-| `.md` | 可读剧本（正文 / 选项 / 输入 / 状态变化 / 终局表） | ~80 KB |
-| `.json` | 结构化 `meta` + `steps[]` + `final_state`，便于程序消费 | ~260 KB |
-| `.html` | 单文件阅读版，状态变化折叠 | ~118 KB |
+| `.md` | 可读剧本（正文 / 选项 / 话题 / 编号基准 / 输入 / 状态变化 / 终局表） | ~85 KB |
+| `.json` | 结构化 `meta` + `steps[]` + `final_state`，便于程序消费 | ~275 KB |
+| `.html` | 单文件阅读版，状态变化与编号基准折叠 | ~125 KB |
 
 实测真结局〔本机 `@SIWPAN` 时点，e2e 重建后〕：
 `52 场景步 / 65 次输入 / 52 不同场景 → end-whiterun`，
@@ -231,7 +238,7 @@ skyrim-lifeline/
 │   └── sample_transcript.txt  序章试玩实录（`dse play --input` 真实输出）
 ├── tests/
 │   ├── e2e_cases.json      e2e 用例数据（由求解器生成，verify.py 消费）
-│   └── cli_check.py        CLI 回归（54 项，纯 stdlib）
+│   └── cli_check.py        CLI 回归（63 项，纯 stdlib）
 └── exports/                导出样本：流程实录 + 全场景大纲
 ```
 
@@ -251,7 +258,7 @@ python tools/verify.py --fast         # 跳过 fuzz（只跑 ① ③ ④）
 python tools/verify.py --chapter ch2  # fuzz 只从第二章入口起步
 python tools/verify.py --samples 100  # 提高每章采样条数（共 500 条路径）
 
-python tests/cli_check.py             # CLI 回归（54 项）
+python tests/cli_check.py             # CLI 回归（63 项）
 frostwords verify --fast              # 等价，走 CLI 转发（退出码原样返回）
 ```
 
@@ -318,7 +325,7 @@ python tools/solve_e2e.py --all --write-cases      # 全量求解并回写 tests
 | 静态图 | `dse check` | `113 场景 / 9 结局（可达 9）`，无悬空、无不可达 |
 | 引擎自检 | `dse doctor` | 健康 |
 | 全量门禁 | `python tools/verify.py` | `200 条随机路径`、`覆盖 91/113 场景 (81%)`、9 条 e2e 全过、9 个结局均 `SE`、`✓ 全部门禁通过` |
-| CLI 回归 | `python tests/cli_check.py` | `PASS 54  FAIL 0  SKIP 0` |
+| CLI 回归 | `python tests/cli_check.py` | `PASS 63  FAIL 0  SKIP 0` |
 | 全结局批量导出 | `frostwords export-run --all-endings --format md,json,html` | 9/9 结局成功，`48–53 场景步`，27 个文件共约 `4.2 MB` |
 | 跨目录调用 | 在 `C:\Windows` 下执行 PATH 垫片 `fwcli export-run` | `49 场景步 → end-alone`，`rc=0` |
 | 垫片字节 | `cli_shim.inspect_shim()` | `ascii=True, bare_lf=0, lone_cr=0, quoted_call=True, marker=True` |

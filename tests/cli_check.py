@@ -190,14 +190,57 @@ def test_export() -> None:
             check("JSON 输入次数 >= 场景步数",
                   data["meta"]["input_count"] >= data["meta"]["step_count"],
                   str(data["meta"])[:160])
+            # ── 对话话题采集（缺口补齐）─────────────────────
+            dlg = [s for s in data["steps"] if s.get("mode") == "dialogue"]
+            check("存在 dialogue 场景步", len(dlg) > 0, f"dialogue={len(dlg)}")
+            check("每个对话步都带可见话题列表",
+                  all(s.get("topics") for s in dlg),
+                  str([s.get("scene") for s in dlg if not s.get("topics")])[:160])
+            check("每个对话步都带逐轮编号基准快照",
+                  all(s.get("topic_snapshots") for s in dlg),
+                  str([s.get("scene") for s in dlg if not s.get("topic_snapshots")])[:160])
+            # 话题编号必须从 1 连续，且与快照里的编号基准一致
+            idx_ok = all(
+                [t["index"] for t in s["topics"]] == list(range(1, len(s["topics"]) + 1))
+                for s in dlg
+            )
+            check("可见话题编号从 1 连续重排", idx_ok)
+            snap_ok = all(
+                all([t["index"] for t in sn["topics"]]
+                    == list(range(1, len(sn["topics"]) + 1))
+                    for sn in s["topic_snapshots"])
+                for s in dlg
+            )
+            check("每轮快照的编号基准同样连续", snap_ok)
+            # 快照数量应与该场景的输入数一致（每次提问留一份）
+            cnt_ok = all(
+                len(s["topic_snapshots"]) == len(s["inputs"]) for s in dlg
+            )
+            check("快照数 == 该场景输入数", cnt_ok,
+                  str([(s["scene"], len(s["topic_snapshots"]), len(s["inputs"]))
+                       for s in dlg])[:200])
+            # 已问过的话题必须保留占编号（引擎 visible() 语义）
+            asked_ok = True
+            for s in dlg:
+                for sn in s["topic_snapshots"]:
+                    asked_ids = {t["id"] for t in sn["topics"] if t.get("asked")}
+                    if asked_ids and len(asked_ids) != len(
+                        [t for t in sn["topics"] if t.get("asked")]
+                    ):
+                        asked_ok = False
+            check("已问话题标记与话题集合一致", asked_ok)
         if files["md"].exists():
             md = files["md"].read_text(encoding="utf-8")
             check("Markdown 含终局状态表与结局 ID",
                   "终局状态" in md and "end-whiterun" in md and "状态变化" in md)
+            check("Markdown 含对话话题段落",
+                  "当时可见的话题" in md and "编号基准" in md)
         if files["html"].exists():
             ht = files["html"].read_text(encoding="utf-8")
             check("HTML 含 doctype / 折叠状态块",
                   "<!doctype html>" in ht and "<details>" in ht)
+            check("HTML 含对话话题段落",
+                  "当时可见的话题" in ht and "编号基准" in ht)
 
         rc, so, se = run(["export-outline", "--output", str(d / "outline.md")])
         check("export-outline rc=0", rc == 0, f"rc={rc} {se[:120]}")

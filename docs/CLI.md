@@ -114,13 +114,34 @@ random.seed(seed)                          # combat 插件用全局 random.rando
 
 | 格式 | 后缀 | 内容 | 典型体积 |
 |---|---|---|---|
-| `md` | `.md` | 可读剧本：每步标题 / 场景 ID / 模式 / 正文 / 当时可见选项 / 输入 / 状态变化，末尾附终局状态表 | ~80 KB |
-| `json` | `.json` | 结构化记录：`meta` + `steps[]`（`state` / `changes` / `inputs` / `choices`）+ `final_state`，便于程序消费 | ~260 KB |
-| `html` | `.html` | 单文件阅读版，状态变化放 `<details>` 折叠 | ~118 KB |
+| `md` | `.md` | 可读剧本：每步标题 / 场景 ID / 模式 / 正文 / 当时可见选项 / **当时可见的话题** / **每轮编号基准** / 输入 / 状态变化，末尾附终局状态表 | ~85 KB |
+| `json` | `.json` | 结构化记录：`meta` + `steps[]`（`state` / `changes` / `inputs` / `choices` / **`topics`** / **`topic_snapshots`**）+ `final_state`，便于程序消费 | ~275 KB |
+| `html` | `.html` | 单文件阅读版，状态变化与编号基准放 `<details>` 折叠 | ~125 KB |
 
 `--format` 接受 `md` / `json` / `html` / `all`，或逗号组合（去重保序）。
 `--output` 指定路径；多格式时按 stem 自动加各自后缀，单格式时原样写入。
 默认输出目录 `exports/`，默认文件名 `playthrough-<结局>.<后缀>`。
+
+### 对话话题的采集口径
+
+`dialogue` 场景的可见话题由引擎 `DialogueService.visible()` 决定，
+导出器**直接调它**、不重算过滤，因此编号与玩家看到的完全一致：
+
+| 字段 | 含义 |
+|---|---|
+| `steps[].topics` | 进入该对话场景时玩家看到的完整话题列表（编号从 1 起，按可见列表重排） |
+| `steps[].topic_snapshots[]` | 每轮提问时的话题快照；`input` 是玩家输入，`topics` 是**该轮编号基准** |
+
+两条易踩的语义差异（别自己重算，会漂）：
+
+- `visible()` **只按 `if` 过滤，不看 `once`** —— 与 `engine.render` 的
+  `choices` 过滤不同（后者还消费 `once`）。
+- **已问过的话题仍留在列表里占编号**，只是标记「已问过」。
+
+话题列表会随对话推进而重排：某次提问的 effect 可能跨过另一个话题的
+`if` 门槛（如 `soul >= 2`），使可见列表缩短、后续编号整体前移。
+`topic_snapshots` 就是为记录这个漂移而存在的 —— 看它能还原出
+「第 3 问时玩家按的 2 指的是哪个话题」。
 
 > 这里的 `.html` 是**流程记录**，由本工具自己渲染，与 `dse export-html`
 > 无关，因此不受「浏览器端只支持 `normal` 模式」的限制。
@@ -266,12 +287,12 @@ ascii=True, bare_lf=0, lone_cr=0, quoted_call=True, marker=True
 | 用例表 | `frostwords cases` | 9 个结局，52–65 步 |
 | 静态大纲 | `export-outline` | 113 场景标题 + 每条出边的条件 / 权重 |
 | 全结局批量导出 | `export-run --all-endings --format md,json,html` | 8/8 成功：`end-alone 49` / `end-dragon 52` / `end-frozen 48` / 其余 5 个各 `51` 场景步；24 个文件共 3.6 MB |
-| 最终验收 | `tools/verify.py` + `tests/cli_check.py` + 批量导出 三条并行 | `全部门禁通过（45.6s）`、`PASS 54 FAIL 0 SKIP 0`、`ALL_ENDINGS_EXIT=0` |
+| 最终验收 | `tools/verify.py` + `tests/cli_check.py` + 批量导出 三条并行 | `全部门禁通过（45.6s）`、`PASS 63 FAIL 0 SKIP 0`、`ALL_ENDINGS_EXIT=0` |
 | 仓库根垫片 | 从 cmd 执行 `frostwords.cmd export-run --ending end-frozen --format md --output <可写目录>\run.md` | `48 场景步 → end-frozen`，`72,299 B`，`rc=0` |
 | 跨目录 PATH 垫片 | 在任一非仓库目录（〔本机〕用了 `C:\Windows`）下 `fwcli export-run --ending end-alone` | `49 场景步 → end-alone`，`73,595 B`，`version_rc=0; export_rc=0` |
-| CLI 回归 | `python tests/cli_check.py` | `PASS 54  FAIL 0  SKIP 0`，`rc=0` |
+| CLI 回归 | `python tests/cli_check.py` | `PASS 63  FAIL 0  SKIP 0`，`rc=0` |
 
-> `PASS 54` 中出现的 `[ERR] 已中断` 是回归里 monkeypatch 触发
+> `PASS 63` 中出现的 `[ERR] 已中断` 是回归里 monkeypatch 触发
 > `KeyboardInterrupt` 验证退出码 `130` 的**有意输出**，不是失败。
 
 ---

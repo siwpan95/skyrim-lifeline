@@ -14,6 +14,15 @@ CLI 只是编排层（见 tools/frostwords_cli.py），真正的采集与渲染�
 刻意不做的事：**不模拟引擎语义**。采集全程跑真实引擎，只是旁听事件，
 不参与推进。这样导出的流程与 `dse play` 完全一致。
 
+对话话题（dialogue 模式）的采集口径：
+    · 引擎 `DialogueService.visible()` 才是「玩家此刻真正看到的话题列表」的唯一
+      真相 —— 它按 `if` 条件过滤（**不看 `once`**）并对可见列表重新编号。
+    · 本模块**不重算**这套过滤，而是在需要时直接调用插件实例的
+      `visible()` 取它返回的列表。这样话题编号与引擎同源，零口径漂移风险。
+    · 话题列表会随对话推进而变化（某次提问的 effect 可能跨过某个话题的
+      `if` 门槛，导致可见列表重排）——所以每问一题都存一份快照，
+      而不是只在进入场景时存一次。
+
 产出三种格式：
     .md   可读剧本（默认）
     .json 结构化流程（步 / 输入 / 状态轨迹），便于程序消费
@@ -126,16 +135,50 @@ def capture(script: list[str], seed: int = DEFAULT_SEED,
     pending_inputs: list[str] = []
     original_ask = io_svc.ask
 
+    # ── 对话话题采集 ──────────────────────────────────────────
+    # 引擎 `DialogueService.visible()` 是「玩家此刻真正看到的话题列表」的唯一
+    # 真相 —— 它按 `if` 条件过滤（**不看 `once`**）并对可见列表重新编号。
+    # 导出器**不重算**这套过滤，直接调插件实例的 visible() 取结果，
+    # 话题编号与引擎同源，零口径漂移风险。
+    dialogue_svc = ctx.services.get("dialogue")
+    pending_snapshots: list[dict] = []   # 累积的逐次提问快照
+
+    def _visible_snapshot() -> list[dict]:
+        """取引擎口径的当前可见话题列表（可序列化）。"""
+        if not dialogue_svc or not getattr(dialogue_svc, "active", None):
+            return []
+        asked = list(dialogue_svc.active.get("asked") or [])
+        rows = []
+        for i, t in enumerate(dialogue_svc.visible()):
+            rows.append({
+                "index": i + 1,
+                "id": t.get("id"),
+                "name": t.get("name"),
+                "if": t.get("if"),
+                "asked": t.get("id") in asked,
+            })
+        return rows
+
     def hooked_ask(prompt: str = "> ") -> str:
         line = original_ask(prompt)
         pending_inputs.append(line)
+        # 此刻的可见列表 = 引擎解析这一行输入时用的编号基准。
+        # 提问的 effect 可能跨过某个话题的 `if` 门槛，使列表在下一问重排，
+        # 所以逐次留快照，而不是只在进入场景时存一次。
+        if dialogue_svc and getattr(dialogue_svc, "active", None):
+            pending_snapshots.append({
+                "input": line,
+                "topics": _visible_snapshot(),
+            })
         return line
 
     def on_enter(sid, scene):
         # 上一场景到此结束：把期间累积的输入归给它
         if steps:
             steps[-1]["inputs"] = list(pending_inputs)
+            steps[-1]["topic_snapshots"] = list(pending_snapshots)
             pending_inputs.clear()
+            pending_snapshots.clear()
 
         mode = scene.get("mode") or "normal"
         snap = flatten(state.snapshot())
@@ -155,6 +198,10 @@ def capture(script: list[str], seed: int = DEFAULT_SEED,
                 "if": choice.get("if"),
             })
 
+        # 对话场景的可见话题：引擎 scene/mode 先于 scene/enter 触发，
+        # 故此刻 dialogue.active 已就绪，visible() 就是玩家看到的那份列表。
+        topics = _visible_snapshot() if mode == "dialogue" else []
+
         # 玩家实际看到的正文：variant / extraText 条件段 / 插值
         text = getattr(engine, "_variant_text", None)
         if text is None:
@@ -171,7 +218,9 @@ def capture(script: list[str], seed: int = DEFAULT_SEED,
             "mode": mode,
             "text": text,
             "choices": visible,
+            "topics": topics,
             "inputs": [],
+            "topic_snapshots": [],
             "state": snap,
         })
 
@@ -193,6 +242,7 @@ def capture(script: list[str], seed: int = DEFAULT_SEED,
 
     if steps:
         steps[-1]["inputs"] = list(pending_inputs)
+        steps[-1]["topic_snapshots"] = list(pending_snapshots)
 
     # 补出每一相对下一步的状态变化（数值轨迹）
     for i, step in enumerate(steps):
@@ -255,6 +305,30 @@ def render_markdown(record: dict) -> str:
             for c in s["choices"]:
                 cond = f"  · 条件 `{c['if']}`" if c["if"] else ""
                 lines.append(f"{c['index']}. {c['text']}{cond}")
+            lines.append("")
+        if s.get("topics"):
+            lines.append("**当时可见的话题**")
+            lines.append("")
+            for t in s["topics"]:
+                marks = []
+                if t.get("if"):
+                    marks.append(f"条件 `{t['if']}`")
+                if t.get("asked"):
+                    marks.append("已问过")
+                cond = f"  · {' · '.join(marks)}" if marks else ""
+                lines.append(f"{t['index']}. {t['name']}{cond}")
+            lines.append("")
+        if s.get("topic_snapshots"):
+            lines.append("**每轮提问时的编号基准**")
+            lines.append("")
+            lines.append("| 输入 | 当时可见的话题编号 |")
+            lines.append("|---|---|")
+            for snap in s["topic_snapshots"]:
+                ids = " ".join(
+                    f"{t['index']}.{t['id']}{'（已问）' if t.get('asked') else ''}"
+                    for t in snap.get("topics") or []
+                ) or "（无）"
+                lines.append(f"| `{snap.get('input')}` | {ids} |")
             lines.append("")
         if s["inputs"]:
             lines.append("**输入**：" + " ".join(f"`{x}`" for x in s["inputs"]))
@@ -330,6 +404,26 @@ def render_html(record: dict) -> str:
             for c in s["choices"]:
                 out.append(f"<div>{c['index']}. {e(c['text'])}</div>")
             out.append("</div>")
+        if s.get("topics"):
+            out.append("<div class=\"choices\"><b>当时可见的话题</b>")
+            for t in s["topics"]:
+                marks = []
+                if t.get("if"):
+                    marks.append(f"条件 {t['if']}")
+                if t.get("asked"):
+                    marks.append("已问过")
+                suffix = ("　· " + " · ".join(marks)) if marks else ""
+                out.append(f"<div>{t['index']}. {e(t['name'])}{e(suffix)}</div>")
+            out.append("</div>")
+        if s.get("topic_snapshots"):
+            out.append("<details><summary>每轮提问时的编号基准</summary><div class=\"chg\">")
+            for snap in s["topic_snapshots"]:
+                ids = " ".join(
+                    f"{t['index']}.{t['id']}" + ("（已问）" if t.get("asked") else "")
+                    for t in snap.get("topics") or []
+                ) or "（无）"
+                out.append(f"{e(str(snap.get('input')))} → {e(ids)}<br>")
+            out.append("</div></details>")
         if s["inputs"]:
             out.append(f"<p><span class=\"io\">输入　{e('  '.join(s['inputs']))}</span></p>")
         if s["changes"]:
