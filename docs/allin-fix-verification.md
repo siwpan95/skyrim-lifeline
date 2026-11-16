@@ -137,7 +137,7 @@ for dirpath, dirnames, filenames in os.walk(base):
 | `error / warn / info` | `4 / 5 / 2` | **`0 / 0 / 0`** |
 | `skipped` | `11`（7 条 `no-dotgit` 等） | `0` |
 
-〔本机〕落地文件：`.gitignore`、`pyproject.toml`（`dse-core>=0.6.0,<0.7`）、
+〔本机，校验时点〕落地文件：`.gitignore`、`pyproject.toml`（当时 `dse-core>=0.6.0,<0.7`，现已改为 `>=0.7.0`）、
 `LICENSE`（MIT 逐字原文 + Bethesda 同人免责声明）、`SECURITY.md`、
 `CONTRIBUTING.md`、`CHANGELOG.md`、`.github/workflows/verify.yml`、
 `.github/dependabot.yml`、`.semgrep.yml`、仓库根 `frostwords.cmd` / `fwcli.cmd`，
@@ -208,6 +208,9 @@ def _declared_dependency_bases(ctx) -> set[str]:
 ## §5 P3 复验：全量回归 + 建仓推送
 
 ### 5.1 本地全量回归（均在推送前的绿状态执行）
+
+> **时点快照**：本节为 0.2.0 / 2026-11-15 的验收数据（109 场景 / 8 结局）。
+> 当前终态为 113 场景 / 9 结局，以本仓 `README.md` §验收结果为准。
 
 | 检查 | 〔本机〕结果 |
 |---|---|

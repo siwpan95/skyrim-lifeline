@@ -25,7 +25,7 @@
 ## 快速开始
 
 ```bash
-pip install dse-core
+pip install "dse-core>=0.7.0"
 
 cd skyrim-lifeline
 dse play                       # 开始游戏
@@ -323,7 +323,7 @@ python tools/solve_e2e.py --all --write-cases      # 全量求解并回写 tests
 | 跨目录调用 | 在 `C:\Windows` 下执行 PATH 垫片 `fwcli export-run` | `49 场景步 → end-alone`，`rc=0` |
 | 垫片字节 | `cli_shim.inspect_shim()` | `ascii=True, bare_lf=0, lone_cr=0, quoted_call=True, marker=True` |
 | 跨仓实战校验（校验时点） | `<ALLIN_ROOT>` 的 `tools/repocheck` 扫 `<REPOS_ROOT>` | 〔本机〕暴露发现层假阴性 `139 只认出 138`、库级 `score 6.0 / 0.442 / error 4` |
-| 跨仓实战校验（整改后） | 同上 + 治理门禁 | 〔本机〕`139/139` 发现、样本 `score 10.0 / 1.0 / error 0`、规则 6 修复使 `24 仓转绿 / 0 回归`、`check:governance 20/20 clean` |
+| 跨仓实战校验（整改后） | 同上 + 治理门禁 | 〔本机，校验时点〕`139/139` 发现、样本 `score 10.0 / 1.0 / error 0`、规则 6 修复使 `24 仓转绿 / 0 回归`、`check:governance 20/20 clean`；删除墓碑仓后终态为 `138 仓 / R6_red=0` |
 | 建仓推送 | Gitee 私有 → 一次性 URL 推送 → 转公开 | 〔本机〕`ls-remote` 与本地 HEAD 一致、匿名 clone `32/32` 文件 + 3 份 blob sha 一致、`.git/config` 无凭据 |
 | 终局数值钳制 | `frostwords export-run --ending end-whiterun --format json` | 〔本机〕`hp=0 / soul=0 / stamina=0 / trust=100 / warmth=7 / clock=20`，全部落在 `bounds` 合法区间 |
 

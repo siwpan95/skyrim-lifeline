@@ -2,6 +2,49 @@
 
 本文件遵循 Keep a Changelog 结构，版本号遵循 SemVer。
 
+## [Unreleased]
+
+### Fixed（2026-11-16 深度审计整改）
+
+- **依赖版本断链（阻断级）**：`pyproject.toml` 与 CI 的 `dse-core` 约束由
+  `>=0.6.0,<0.7` 改为 `>=0.7.0`，并把 `PyYAML>=6.0` 补为直接依赖。
+  对照实测：0.6.0 下 9 条 e2e 全挂（rc=1），0.7.0 下全绿（rc=0）；
+  `dse check` 在 0.6.0 下会假通过，只有 e2e 能暴露。
+- **CI 门禁空跑**：workflow 加入 semgrep SAST 步骤与 `pip show dse-core`
+  版本记录，四层门禁改为全量（不再 `--fast`，恢复 fuzz 层）。
+- **对话编号漂移残留**：`ch2-guard-talk` 的 `thuUm` 话题去掉
+  `if: clues.helgenTruth`（该变量被 `what` 在对话内改写，导致可见话题
+  4→5 中途漂移）；`dse.yml` 的 `@loop` 注释同步为「已使用」。
+- **测试与门禁假阳性**：`cli_check.py` 用法错误断言补 `needle` 文本校验；
+  4 条 e2e 补齐状态断言（现 9/9 全覆盖，且 `solve_e2e.py` 的 `EXPECT`
+  表同步，避免重建时回退）；覆盖门改为必须有 e2e 来源 `E`；
+  `verify.py` 字段预声明门递归覆盖嵌套条件键（12→18 个引用），
+  `run_e2e` 补 `DSE_ENTRY` 清理。
+- **工具与产物**：垫片不再烘焙解释器绝对路径，CLI 回归改为临时目录
+  生成垫片，不再污染工作树；导出支持 `FW_GENERATED_AT` 固定时间戳；
+  `solve_e2e.py` 打印片段与实际用例格式统一；结局数帮助文本统一为 9。
+- **文档口径收口**：按实测刷新 `CLI.md` / `design.md` / `README` /
+  `graph.mmd`（补 4 场景 + 第 9 结局，现 113 节点 / 9 结局）的场景数、
+  结局数、步数与仓数（终态 138）；试玩实录标注为修复前历史录像；
+  两份 allin 报告标明时点快照与终态；`SECURITY.md` 支持表补齐
+  0.2.x / 0.3.x；`pyproject.toml` 版本同步 0.3.1；`CHANGELOG`
+  的 `[Unreleased]` 移至文件顶部。
+
+### Docs
+
+- `docs/allin-fix-verification.md` 增补 §9「追加批次：规则 6 全绿与全量门禁」：
+  记录规则 6 从 74 红到 0 红的工具侧四轮修复、52 仓声明补齐与推送终核、
+  `# r6-local:` 机制、全量 `run_all_gates.sh` 实跑结论，并把 §1/§6 的
+  过时「未修/未跑」三态更新为 ✅（保留旧行作历史快照）。
+  〔本机 `@SIWPAN` 时点事实〕`139 仓 / R6_red=0`、
+  `ALLIN_GATE_SUMMARY status=clean fail=0`；他机须按 §0 占位符现场复测。
+- §9.7 补记：远端 404 的 `happy-childrens-day` 是已收拢进 `arcade`
+  并归档进 `game-prototypes` 的墓碑仓，非待处理异常。其
+  `sounddevice` / `soundfile` 声明已在 `arcade` 与 `game-prototypes` 两个
+  有效落点存在；本地冗余仓备份后送回收站。删除后复扫
+  〔本机 `@SIWPAN`〕`projects: 138 R6_red: 0`，全量门禁复跑仍为
+  `status=clean fail=0`。
+
 ## [0.3.1] - 2026-11-16
 
 ### Fixed
@@ -62,23 +105,6 @@
 - `tests/cli_check.py`：`cases` 断言 8 → 9，`export-outline` 标题数 109 → 113。
 - `tools/solve_e2e.py` / `tests/e2e_cases.json`：9 条 e2e 全部用真实引擎重建。
 - `README.md` / `docs/CLI.md` / `frostwords_cli.py`：结构性数字同步更新。
-
-## [Unreleased]
-
-### Docs
-
-- `docs/allin-fix-verification.md` 增补 §9「追加批次：规则 6 全绿与全量门禁」：
-  记录规则 6 从 74 红到 0 红的工具侧四轮修复、52 仓声明补齐与推送终核、
-  `# r6-local:` 机制、全量 `run_all_gates.sh` 实跑结论，并把 §1/§6 的
-  过时「未修/未跑」三态更新为 ✅（保留旧行作历史快照）。
-  〔本机 `@SIWPAN` 时点事实〕`139 仓 / R6_red=0`、
-  `ALLIN_GATE_SUMMARY status=clean fail=0`；他机须按 §0 占位符现场复测。
-- §9.7 补记：远端 404 的 `happy-childrens-day` 是已收拢进 `arcade`
-  并归档进 `game-prototypes` 的墓碑仓，非待处理异常。其
-  `sounddevice` / `soundfile` 声明已在 `arcade` 与 `game-prototypes` 两个
-  有效落点存在；本地冗余仓备份后送回收站。删除后复扫
-  〔本机 `@SIWPAN`〕`projects: 138 R6_red: 0`，全量门禁复跑仍为
-  `status=clean fail=0`。
 
 ## [0.2.0] - 2026-11-15
 

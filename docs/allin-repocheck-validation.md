@@ -301,7 +301,7 @@ r = scanner.check_project(r"<PROJECT_ROOT>")
 |---|---|---|
 | 规则 6 的 `dse_core` 假阳性 | ✅ **已修**（allin `67dc184`），且**没有**采用当初建议的 `importlib.metadata` 实查 | 实查依赖本机安装状态，会把「装没装」混进通用静态判据，且他机不可复现。改为读项目自己的 `pyproject.toml` / `requirements*.txt` 声明，跨机可复现、可版本化；发布区实测 24 仓转绿、0 回归 |
 | 规则 11 的 README 关键词表 | ❌ **有意不改工具侧**，样本侧补「用法与示例」小节后转绿 | 三类语义分区是有意设计；把 `quick start` 同时算作「用法/示例」会让两类合并、失去区分度。当初「补关键词」的建议经复核不成立，见最终报告 §4.3 |
-| 全量 `run_all_gates.sh` | ❌ 未跑（如实标注） | 已跑 `check:governance`（20/20，含 `g20-facts`）、repocheck 全量测试、本仓四层门禁；跨仓全量门禁属 allin 独立回归，不冒充已跑 |
+| 全量 `run_all_gates.sh` | ❌ 校验时点未跑；✅ 后续批次已实跑 | 已跑 `check:governance`（20/20，含 `g20-facts`）、repocheck 全量测试、本仓四层门禁；后续批次全量门禁实跑结论见 `allin-fix-verification.md` §9.5（`status=clean fail=0`） |
 | 远端 CI 实跑 | ❌ 未验证 | workflow 只在 GitHub 侧触发，本仓当前只有 Gitee 远端；本地 YAML 语法与等价门禁已过，runner 实跑未发生 |
 
 > 〔本机事实〕`3b0b407` / `67dc184` / `d7b70d5` 是 `@SIWPAN` 上 allin

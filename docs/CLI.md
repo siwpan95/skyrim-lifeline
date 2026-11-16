@@ -40,7 +40,7 @@
 | 命令 | 作用 | 产出 |
 |---|---|---|
 | `export-run` | **完整导出一次游戏流程**（真实引擎逐场景采集） | `.md` / `.json` / `.html` |
-| `export-outline` | 导出全部 109 个场景的**静态流程大纲** | `exports/outline.md` |
+| `export-outline` | 导出全部 113 个场景的**静态流程大纲** | `exports/outline.md` |
 | `cases` | 列出 9 个可用结局及通关脚本步数 | stdout / JSON |
 | `play` | 转发到 `dse play`，参数原样透传 | 交互终端 |
 | `verify` | 转发到 `tools/verify.py`（四层门禁） | 门禁报告 |
@@ -106,7 +106,7 @@ random.seed(seed)                          # combat 插件用全局 random.rando
 
 > **输入次数通常 > 场景步数**：一个 `dialogue` 场景里连问三题、一个
 > `battle` 场景里打五个回合，都只算一个 `scene/enter`。
-> 实测真结局 `51 场景步 / 62 次输入`。
+> 实测真结局 `52 场景步 / 65 次输入`。
 
 ---
 
@@ -147,7 +147,7 @@ random.seed(seed)                          # combat 插件用全局 random.rando
 | `--format LIST` | `md` | `md` / `json` / `html` / `all` / 逗号组合 |
 | `--output PATH` | `exports/playthrough-<结局>.<后缀>` | 多格式按 stem 加后缀 |
 | `--seed N` | `20261115` | 正整数；固定加权分支与战斗随机数 |
-| `--all-endings` | 关 | 为全部 8 个结局各导出一份，忽略 `--output` / `--script` |
+| `--all-endings` | 关 | 为全部 9 个结局各导出一份，忽略 `--output` / `--script` |
 
 ```bat
 frostwords export-run
@@ -158,7 +158,7 @@ frostwords export-run --all-endings --format md,json,html
 ```
 
 > `--all-endings` 是批量调用同一条 `core.export_run()`，`--ending` 会被忽略。
-> 8 个结局 × 3 格式 = 24 个文件，实测 3.6 MB（另加 1 份 `outline.md` 共 25 个）。
+> 9 个结局 × 3 格式 = 27 个文件，实测约 4.2 MB（另加 1 份 `outline.md` 共 28 个）。
 
 ---
 
@@ -255,12 +255,15 @@ ascii=True, bare_lf=0, lone_cr=0, quoted_call=True, marker=True
 以下数值全部是 `@SIWPAN` 在 2026-11-15 的单点观测，仅供核对量级，
 **不得当作跨机器断言**。命令口径与退出码契约是通用的。
 
+> 本节表格为 2026-11-15 的时点快照；当前验收基线（113 场景 / 9 结局 /
+> 52 步 65 输入 / 27 文件约 4.2 MB）见 `README.md` §验收结果。
+
 | 场景 | 命令 / 动作 | 结果 |
 |---|---|---|
 | 真结局采集 | `export_run.capture()` | `51 场景步 / 62 次输入 / 51 不同场景 → end-whiterun`；`normal 45 / dialogue 2 / battle 3 / trade 1` |
 | 三格式导出 | `frostwords export-run --ending end-thu-um --format all` | 3 文件全 OK，`51 场景步 → end-thu-um` |
 | 大纲 | `frostwords export-outline --json` | `{"ok":true,"bytes":48916,"scenes":113}` |
-| 用例表 | `frostwords cases` | 8 个结局，52–62 步 |
+| 用例表 | `frostwords cases` | 9 个结局，52–65 步 |
 | 静态大纲 | `export-outline` | 113 场景标题 + 每条出边的条件 / 权重 |
 | 全结局批量导出 | `export-run --all-endings --format md,json,html` | 8/8 成功：`end-alone 49` / `end-dragon 52` / `end-frozen 48` / 其余 5 个各 `51` 场景步；24 个文件共 3.6 MB |
 | 最终验收 | `tools/verify.py` + `tests/cli_check.py` + 批量导出 三条并行 | `全部门禁通过（45.6s）`、`PASS 54 FAIL 0 SKIP 0`、`ALL_ENDINGS_EXIT=0` |
@@ -303,12 +306,12 @@ ascii=True, bare_lf=0, lone_cr=0, quoted_call=True, marker=True
 | PowerShell 报 `Format-Wide: 找不到接受自变量 '--ending' 的位置参数` | 用了 `fw`（内置别名）→ 改 `fwcli` 或 `frostwords` |
 | `.cmd` 报一堆命令碎片 / `'锘' 不是内部或外部命令` | 垫片被改成 UTF-8 中文或 BOM → 重新 `install-cli`；垫片必须纯 ASCII |
 | `[ERR] Python not found...` / `rc=6` | 探测链全断 → 设 `FW_PYTHON=<该机 python.exe 绝对路径>` |
-| `rc=6 dse-core 或导出模块不可用` | 当前解释器没装 `dse-core` → `pip install dse-core`，或换回该机装有 `dse-core` 的解释器 |
+| `rc=6 dse-core 或导出模块不可用` | 当前解释器没装 `dse-core` → `pip install "dse-core>=0.7.0"`，或换回该机装有 `dse-core` 的解释器 |
 | `rc=2 未知结局 'end-xxx'` | `tests/e2e_cases.json` 里没有 → `frostwords cases` 查 ID |
 | 导出流程走到一半就停 | 自定义 `--script` 输入用尽或走进死路 → 用 `--ending` 的已验证脚本 |
 | 同一脚本两次导出结果不同 | 忘了固定全局随机源（本工具已固定 `engine.rng` + `random.seed`）；或内容包改过导致选项编号漂移 |
 | 改动内容包后导出全错 | 选项编号漂移 → 先跑 `python tools/solve_e2e.py --all --write-cases` |
-| 批量导出占空间 | `--all-endings --format md,json,html` 会写 24 个文件约 3.6 MB → 用 `--format md` 或清理 `exports/` |
+| 批量导出占空间 | `--all-endings --format md,json,html` 会写 27 个文件约 4.2 MB → 用 `--format md` 或清理 `exports/` |
 
 ---
 
@@ -318,9 +321,10 @@ ascii=True, bare_lf=0, lone_cr=0, quoted_call=True, marker=True
    穷举所有路径数学上不可行（路径数约 `2.37 × 10²⁸`，见 `docs/design.md` §四）。
 2. **`--script` 不做可达性预判。** 给一条不合法输入流，引擎会按它的规则
    （无效输入重问 / 输入耗尽退出）结束，导出的就是「已走完的部分」。
-3. **数值平衡仍是骨架阶段待办。** 实测真结局终局为
-   `hp=-38 / soul=-22 / warmth=5 / trust=129` —— 资源可为负、
-   `trust` 无上限钳制、缺硬性死亡分支。导出会如实记录这些值，不做美化。
+3. **数值平衡已由 dse-core 0.7.0 护栏解决。** `state.bounds` 在每次结算后
+   把七项资源钳进合法区间，`state.fatal` 提供早期冻死分支；真结局终局实测
+   `hp=0 / soul=0 / stamina=0 / trust=100 / warmth=7 / clock=20`，全部落在
+   `bounds` 内。导出如实记录引擎终值，不做美化。见 `docs/design.md` §3.1。
 4. **`end-select` 是并列选择，不是自动分流。** 满足条件的所有结局同时出现，
    最后一按由玩家负责；`--ending` 选择的是求解器验证过的那条输入流。
 5. **`export-outline` 不跑引擎**，因此条件段的运行时取值不在大纲里，
