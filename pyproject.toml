@@ -1,6 +1,6 @@
 [project]
 name = "skyrim-lifeline"
-version = "0.3.1"
+version = "0.3.2"
 description = "霜语 · Frostwords：基于 dse-core 的上古卷轴同人纯文字生存叙事"
 requires-python = ">=3.11"
 license = "MIT"

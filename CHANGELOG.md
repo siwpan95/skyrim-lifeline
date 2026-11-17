@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-17
+
 ### Fixed（2026-11-16 深度审计整改）
 
 - **依赖版本断链（阻断级）**：`pyproject.toml` 与 CI 的 `dse-core` 约束由
@@ -27,7 +29,7 @@
   `graph.mmd`（补 4 场景 + 第 9 结局，现 113 节点 / 9 结局）的场景数、
   结局数、步数与仓数（终态 138）；试玩实录标注为修复前历史录像；
   两份 allin 报告标明时点快照与终态；`SECURITY.md` 支持表补齐
-  0.2.x / 0.3.x；`pyproject.toml` 版本同步 0.3.1；`CHANGELOG`
+  0.2.x / 0.3.x；`pyproject.toml` 版本同步 0.3.1（本 tag 起为 0.3.2）；`CHANGELOG`
   的 `[Unreleased]` 移至文件顶部。
 
 ### Added（导出器补齐对话可见话题）
