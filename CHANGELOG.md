@@ -4,6 +4,21 @@
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-11-17
+
+### Fixed
+
+- **Windows CI 中文编码崩溃**：GitHub Actions 的 `windows-latest` runner 默认
+  控制台编码为 `charmap`，`dse check` 输出中文场景名时抛
+  `UnicodeEncodeError`，导致 verify 工作流首次实跑（run `44089754287`）失败。
+  在 workflow 的 `jobs.gates.env` 增加 `PYTHONUTF8: '1'` 与
+  `PYTHONIOENCODING: utf-8` 后，run `44090179395` 的 Static check、
+  SAST (semgrep)、Four-layer gates、CLI regression **全部 success**。
+  semgrep 规则由此完成首次实跑复核。
+- **版本与 tag 对齐**：`pyproject.toml` 同步为 0.3.3。原 `v0.3.2` tag 指向
+  CI 编码修复之前的 `ef1b8f4`；按「tag 只增不改」原则保留其为历史 tag，
+  不执行 force push，改以本版本的 `v0.3.3` 作为当前发布点。
+
 ## [0.3.2] - 2026-11-17
 
 ### Fixed（2026-11-16 深度审计整改）
